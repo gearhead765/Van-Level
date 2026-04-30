@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+
+<head>
+ <meta charset=utf-8>
+  <meta http-equiv=X-UA-Compatible content=IE=edge>
+  <title>Van Level</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <style>
+    @media screen and (orientation: landscape) {
+      .container {
+        object-fit: contain;
+        position: absolute;
+        text-align: center;
+        font-weight: bold;
+        font-size: 3vw;
+      }
+      .van-image {
+        width: 100%;
+      }
+      #left-front {
+        position: absolute;
+        bottom: 15%;
+        left: 16%;
+        transform: translate(-50%, 50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #right-front {
+        position: absolute;
+        top: 14%;
+        left: 16%;
+        transform: translate(-50%, -50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #right-rear {
+        position: absolute;
+        top: 14%;
+        right: 30%;
+        transform: translate(50%, -50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #left-rear {
+        position: absolute;
+        bottom: 15%;
+        right: 30%;
+        transform: translate(50%, 50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #info {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: left;
+      }
+    }
+    
+    @media screen and (orientation: portrait) {
+      .container {
+        object-fit: contain;
+        position: absolute;
+        text-align: center;
+        font-weight: bold;
+        font-size: 3.3vw;
+      }
+      .van-image {
+        width: 100%;
+        /* center of rotation is  (((length+width)/4) / width) and (((length+width)/4) / length) */
+        transform-origin: 39.22% 68.96%;
+        transform: rotate(90deg);
+      }
+      #left-front {
+        position: absolute;
+        top: 20%;
+        left: 28%;
+        transform: translate(-50%, 50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #right-front {
+        position: absolute;
+        top: 20%;
+        right: 28%;
+        transform: translate(50%, 50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #right-rear {
+        position: absolute;
+        bottom: -30%;
+        right: 28%;
+        transform: translate(50%, -50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #left-rear {
+        position: absolute;
+        bottom: -30%;
+        left: 28%;
+        transform: translate(-50%, -50%);
+        border: 1px solid;
+        padding: .3vw;
+      }
+      #info {
+        position: absolute;
+        top: 90%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container"> <img src="images/transit_top_transparent.png" alt="Image of van roof" class="van-image">
+    <div id="left-front">1</div>
+    <div id="right-front">2</div>
+    <div id="right-rear">3</div>
+    <div id="left-rear">4</div>
+    <div id="info">Van Info</div>
+  </div>
+  <script>
+    const VAN_TYPE = 'Transit';
+    const WHEELBASE = 148;
+    const TRACK = 68;
+    const FRACTION = 1; // adjust wheel lift values to the nearest 1/n inches
+    // Round value to nearest fraction
+    function roundF(value) {
+      var temp = value * FRACTION
+      temp = Math.round(temp);
+      return temp / FRACTION;
+    }
+    // Function to display van information and wheel lift values
+    function displayReadings(pPitch, pRoll, pVer) {
+      document.getElementById("info").innerHTML = VAN_TYPE + "<span style=\"font-size: 1vw\"> v" + pVer + "</span><br>"
+                                                  + WHEELBASE + "&quot; WB<br>" + TRACK
+                                                  + "&quot; Track<br>Pitch: " + pPitch + "&deg;<br>Roll: "
+                                                  + pRoll + "&deg;";
+      var pitch_height = Math.tan((Math.abs(pPitch) * Math.PI) / 180) * WHEELBASE;
+      var roll_height = Math.tan((Math.abs(pRoll) * Math.PI) / 180) * TRACK;
+      // Display the lift amounts relative to the low wheel and hide the low wheel display
+      if (pPitch < 0 && pRoll < 0) {
+        document.getElementById("left-front").style.visibility = "hidden";
+        document.getElementById("right-front").style.visibility = "visible";
+        document.getElementById("right-rear").style.visibility = "visible";
+        document.getElementById("left-rear").style.visibility = "visible";
+        document.getElementById("right-front").innerHTML = roundF(roll_height) + "&quot;";
+        document.getElementById("right-rear").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
+        document.getElementById("left-rear").innerHTML = roundF(pitch_height) + "&quot;";
+      } else if (pPitch < 0 && pRoll >= 0) {
+        document.getElementById("left-front").style.visibility = "visible";
+        document.getElementById("right-front").style.visibility = "hidden";
+        document.getElementById("right-rear").style.visibility = "visible";
+        document.getElementById("left-rear").style.visibility = "visible";
+        document.getElementById("left-front").innerHTML = roundF(roll_height) + "&quot;";
+        document.getElementById("right-rear").innerHTML = roundF(pitch_height) + "&quot;";
+        document.getElementById("left-rear").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
+      } else if (pPitch >= 0 && pRoll < 0) {
+        document.getElementById("left-front").style.visibility = "visible";
+        document.getElementById("right-front").style.visibility = "visible";
+        document.getElementById("right-rear").style.visibility = "visible";
+        document.getElementById("left-rear").style.visibility = "hidden";
+        document.getElementById("left-front").innerHTML = roundF(pitch_height) + "&quot;";
+        document.getElementById("right-front").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
+        document.getElementById("right-rear").innerHTML = roundF(roll_height) + "&quot;";
+      } else if (pPitch >= 0 && pRoll >= 0) {
+        document.getElementById("left-front").style.visibility = "visible";
+        document.getElementById("right-front").style.visibility = "visible";
+        document.getElementById("right-rear").style.visibility = "hidden";
+        document.getElementById("left-rear").style.visibility = "visible";
+        document.getElementById("left-front").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
+        document.getElementById("right-front").innerHTML = roundF(pitch_height) + "&quot;";
+        document.getElementById("left-rear").innerHTML = roundF(roll_height) + "&quot;";
+      }
+    }
+    // Function to get current readings on the webpage when it loads for the first time
+    function getReadings() {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          var myObj = JSON.parse(this.responseText);
+          console.log(myObj);
+          displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver);
+        }
+      };
+      xhr.open("GET", "/readings", true);
+      xhr.send();
+    }
+    // Get current sensor readings when the page loads  
+    window.addEventListener('load', getReadings);
+    // Add a listener for periodic updates from the ESP32
+    if (!!window.EventSource) {
+      var source = new EventSource('/events');
+      source.addEventListener('open', function(e) {
+        console.log("Events Connected");
+      }, false);
+      source.addEventListener('error', function(e) {
+        if (e.target.readyState != EventSource.OPEN) {
+          console.log("Events Disconnected");
+        }
+      }, false);
+      source.addEventListener('message', function(e) {
+        console.log("message", e.data);
+      }, false);
+      source.addEventListener('new_readings', function(e) {
+        console.log("new_readings", e.data);
+        var myObj = JSON.parse(e.data);
+        console.log(myObj);
+        displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver);
+      }, false);
+    }
+  </script>
+</body>
+
+</html>

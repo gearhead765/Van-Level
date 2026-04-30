@@ -1,0 +1,335 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset=utf-8>
+  <meta http-equiv=X-UA-Compatible content=IE=edge>
+  <meta name=viewport content="width=device-width, initial-scale=1">
+  <title>Van Level Setup</title>
+  <link href=css/bootstrap.min.css rel=stylesheet>
+  <link href=css/pixie-main.css rel=stylesheet>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+
+<body>
+  <div class=main-box>
+    <ul class="nav nav-pills">
+      <li class=active>
+        <a data-toggle=pill href=#status> <img src=images/status.png alt>Status</a>
+      </li>
+      <li>
+        <a data-toggle=pill href=#network> <img src=images/network.png alt>Network</a>
+      </li>
+      <li>
+        <a data-toggle=pill href=#calibrate> <img src=images/calibrate.png alt>Calibration</a>
+      </li>
+      <li>
+        <a data-toggle=pill href=#other> <img src=images/other.png alt>Other</a>
+      </li>
+   </ul>
+    <div class=tab-content>
+      <div id=status class="tab-pane fade in active">
+        <table class=table style="font-size:20px">
+          <tbody>
+            <tr>
+              <td class=border-none>MAC</td>
+              <td class=text-right id="txtmac"></td>
+            </tr>
+            <tr>
+              <td>Access point IP</td>
+              <td class=text-right id="txtmyip"> </td>
+            </tr>
+            <tr>
+              <td>Wi-Fi Network</td>
+              <td class=text-right id="wsid"> </td>
+            </tr>
+            <tr>
+              <td>WLAN WAN IP</td>
+              <td class=text-right id="localip"> </td>
+            </tr>
+          </tbody>
+        </table>
+        <h4> <img src=images/ap.png alt>Access Point Configuration</h4>
+        <form>
+          <div class=form-group>
+            <span class="grey-text font-weight-light" style="font-size:20px"> AP Name</span>
+            <input type="text" id="txtssid" class="form-control" placeholder="SSID" value="">
+          </div>
+          <div class=form-group>
+            <span class="grey-text font-weight-light" style="font-size:20px">AP IP</span>
+            <input type="text" id="txtaplan" class="form-control" placeholder="IP Address" value="">
+          </div>
+          <div class=form-group>
+            <span class="grey-text font-weight-light" style="font-size:20px">AP Password &nbsp;&nbsp;</span>
+            <input type="checkbox" onclick="Gateway_passFunction()" id="apPassCheckbox">      
+            <label for="apPassCheckbox" style="font-size:16px;display:inline;"> Show Password</label>
+            <input type="password" id="txtpass" class="form-control" placeholder="Password">
+          </div>
+          <div class=text-center>
+            <button class="btn btn-block" type="button" id="apply_btn" title=Apply>Apply</button>
+          </div>
+          <p style="color:red; font-size: 60%; text-align: center;">After pressing Apply, press the Reboot button located on the Other tab to activate changes.</p>
+        </form>
+      </div>
+      <div id=network class="tab-pane fade">
+        <div class=panel-group id=accordion>
+          <div class="panel panel-default">
+            <div class=panel-heading>
+              <h4 class=panel-title> <a class=active.collapsed data-toggle=collapse data-parent=#accordion href=#collapse1> Wi-Fi settings <span class=switch> <input type=checkbox id="wifi"> <span class="slider round"></span> </span> </a> </h4>
+            </div>
+            <div id=collapse1 class="panel-collapse collapse">
+              <div class=panel-body>
+                <div class=form-group>
+                  <span class="grey-text font-weight-light" style="font-size:20px">Nearby WLAN</span>
+                  <select class="mdb-select form-control" id="drpWLAN" placeholder="scan for wifi">
+                    <!-- <option value=1 placeholder="scan for wifi" ></option> -->
+                  </select>
+                </div>
+                <div class=form-group>
+                  <span class="grey-text font-weight-light" style="font-size:20px">Password &nbsp;&nbsp;</span>
+                  <input type="checkbox" onclick="Router_passFunction()" id="routerPassCheckbox">
+                  <label for="routerPassCheckbox" style="font-size:16px;display:inline;"> Show Password</label>
+                  <input type=password id="wifi_pass" class=form-control placeholder=Password>
+                </div>
+                <div class=text-center>
+                  <button class="btn btn-block" type="button" id="scan_wifi" title=scan>Scan Wi-fi</button>
+                </div>
+                <div class=form-group>
+                  <span class="grey-text font-weight-light" style="font-size:20px">Mode</span>
+                  <select class="mdb-select-repeater form-control" id="wifi_mode">
+                    <option value=1 class=inner-dhcp-box>dhcp</option>
+                    <option value=2 class=inner-static-box>static</option>
+                  </select>
+                </div>
+                <div class=box-4>
+                  <form>
+                    <div class=form-group>
+                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>IP Address</span>
+                      <input type=text id="txtipadd" class=form-control placeholder="IP Address">
+                    </div>
+                    <div class=form-group>
+                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>NetMask</span>
+                      <input type=email id="net_m" class=form-control placeholder=NetMask>
+                    </div>
+                    <div class=form-group>
+                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>Gateway Address</span>
+                      <input type=text id="g_add" class=form-control placeholder="Gateway Address">
+                    </div>
+                    <div class=form-group>
+                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>Primary DNS Address</span>
+                      <input type=text id="p_dns" class=form-control placeholder="Primary DNS Address">
+                    </div>
+                    <div class=form-group>
+                      <span class="grey-text font-weight-light" style="font-size:20px">Secondary DNS Address</span>
+                      <input type=text id="s_dns" class=form-control placeholder="Secondary DNS Address">
+                    </div>
+                  </form>
+                </div>
+                <div class=text-center>
+                  <button class="btn btn-block" type="button" id="con_btn" title=Connect>Apply</button>
+                  <p style="color:red; font-size: 60%; text-align: center;">After pressing Apply, press the Reboot button located on the Other tab to activate changes.</p>
+				  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id=calibrate class="tab-pane fade">
+        <div class=form-group>
+          <div class=row>
+            <div class="col-md-6">
+              <span class="grey-text font-weight-light" style="font-size:20px">Pitch Offset &nbsp;&nbsp;</span>
+              <input type="checkbox" id="pitchInvert">
+              <label for="pitchInvert" style="font-size:16px;display:inline"> Reverse direction</label>
+              <input type=text id="pitchOffset" class=form-control placeholder="0" value="">
+            </div>
+            <div class="col-md-6">
+              <span class="grey-text font-weight-light" style="font-size:20px">Roll Offset &nbsp;&nbsp;</span>
+              <input type="checkbox" id="rollInvert">
+              <label for="rollInvert" style="font-size:16px;display:inline"> Reverse direction</label>
+              <input type=text id="rollOffset" class=form-control placeholder="0" value="">
+            </div>
+          </div>
+          <div class=text-center style="padding-top:10px">
+            <button class="btn btn-block" type="button" id="cal_btn" title=Apply>Apply</button>
+          </div>
+        </div>
+      </div>
+      <div id=other class="tab-pane fade">
+        <div class=form-group>
+          <h4><img src=images/reboot.png alt="">CONTROL</h4>
+          <div class="row">
+            <div class="col-md-6">
+              <button class="btn btn-block" type="button" id="reboot_btn" title=Reboot>Reboot</button>
+            </div>
+            <div class="col-md-6">
+              <button class="btn btn-block" type="button" id="reset_btn" title=Reset>Reset</button>
+              <p style="color:red; font-size: 60%; text-align: center;">Clear WiFi setup and reset AP to default</p>
+            </div>
+            <p>&nbsp;</p>            
+            <div class="col-md-12">
+              <p style="color:red; font-size: 60%; text-align: left;">Version:  <span id="txtver"></span></p>
+              <a href="./update" class="btn btn-block">Update Firmware / File System Upload</a>
+              <p style="color:red; font-size: 60%; text-align: center;">Firmware Updates:  Username = AP SSID, Password = AP Password</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src=js/jquery-1.12.3.min.js></script>
+  <script src=js/bootstrap.min.js></script>
+  <script src=js/pixie-custom.js></script>
+  <script type="text/javascript">
+    var mainResponse = {};
+    $(document).ready(function() {
+      $.getJSON("/setupData").done(function(response) {
+        // mac,myip,localip on static field
+        $("#txtver").text(response.ver);
+        $("#txtmyip").text(response.myIP);
+        $("#localip").text(response.localIP);
+        $("#wsid").text(response.wsid);
+        $("#txtssid").val(response.apname);
+        $("#txtaplan").text(response.myIP);
+        $("#pitchOffset").val(response.p_offset);
+        $("#rollOffset").val(response.r_offset);
+        $("#txtmac").text(response.MAC);
+        
+        if (response.p_invert == "-1") {
+          document.getElementById("pitchInvert").checked = true;
+        } else {
+          document.getElementById("pitchInvert").checked = false;
+        }
+        if (response.r_invert == "-1") {
+          document.getElementById("rollInvert").checked = true;
+        } else {
+          document.getElementById("rollInvert").checked = false;
+        }
+        mainResponse = response;
+      });
+      clicevent();
+    });
+
+    function clicevent() {
+      $(document).on("click", "#apply_btn", function() {
+        var txtaplan = $("#txtaplan").val();
+        var txtssid = $("#txtssid").val();
+        var txtpass = $("#txtpass").val();
+        $.post("/applyBtnFunction?txtaplan=" + txtaplan + "&txtssid=" + txtssid 
+                 + "&txtpass=" + txtpass).done(function(response) {
+          if (response == "ok") {
+            alert("please reboot the device to apply changes");
+          }
+        });
+      });
+      $(document).on("click", "#scan_wifi", function() {
+        var scan_wifi = $("#scan_wifi").val();
+        $.get("/scanWifi?scan_wifi=" + scan_wifi).done(function(response) {
+          console.log(response)
+          if (response.length > 0) {
+            var html = "";
+            for (var item of response) {
+              html = html + " <option value=" + item.ssid + ">" + item.ssid + "</option>";
+            }
+            $("#drpWLAN").html(html);
+          }
+        });
+      });
+      $(document).on("click", "#cal_btn", function() {
+        var p_invert = "";
+        var r_invert = "";
+        var p_offset = $("#pitchOffset").val();
+        var r_offset = $("#rollOffset").val();
+        if (document.getElementById("pitchInvert").checked) {
+          p_invert = "-1";
+        } else {
+          p_invert = "1";
+        }
+        if (document.getElementById("rollInvert").checked) {
+          r_invert = "-1";
+        } else {
+          r_invert = "1";
+        }
+        $.get("/applyOffsetFunction?p_offset=" + p_offset + "&p_invert=" + p_invert 
+                 + "&r_offset=" + r_offset + "&r_invert=" + r_invert).done(function(response) {
+          if (response == "ok") {
+            alert("offsets applied");
+          }
+        });
+      });
+      $(document).on("click", "#con_btn", function() {
+        getNetwork();
+      });
+      $(document).on("click", "#reboot_btn", function() {
+        var reboot_btn = "reboot_device";
+        $.get("/rebootBtnFunction?reboot_btn=" + reboot_btn).done(function(response) {
+          if (response == "ok") {
+            alert("restarting in 5 seconds");
+          }
+        });
+      });
+      $(document).on("click", "#reset_btn", function() {
+        var reset_btn = "reset_device";
+        $.get("/resetBtnFunction?reset_btn=" + reset_btn).done(function(response) {
+          if (response == "ok") {
+            alert("device is reset, please reboot to apply changes");
+          }
+        });
+      });
+    }
+
+    function getNetwork() {
+      var wifi_ssid = $("#drpWLAN :selected").text();
+      var wifi_pass = $("#wifi_pass").val();
+      var wifi_mode = $("#wifi_mode :selected").text();
+      var txtipadd = $("#txtipadd").val();
+      var net_m = $("#net_m").val();
+      var g_add = $("#g_add").val();
+      var p_dns = $("#p_dns").val();
+      var s_dns = $("#s_dns").val();
+      var urldata = "";
+      if (wifi_mode == "static") {
+        urldata = "wifi_ssid=" + wifi_ssid 
+                + "&wifi_pass=" + wifi_pass 
+                + "&wifi_mode=" + wifi_mode 
+                  + "&txtipadd=" + txtipadd 
+                  + "&net_m=" + net_m 
+                  + "&g_add=" + g_add 
+                  + "&p_dns=" + p_dns 
+                  + "&s_dns=" + s_dns;
+      } else {
+        urldata = "wifi_ssid=" + wifi_ssid + "&wifi_pass=" + wifi_pass + "&wifi_mode=" + wifi_mode;
+      }
+      if (wifi_ssid == "" || wifi_pass == "") {
+        alert("SSID and password can't be empty");
+      } else {
+        $.post("/connectBtnFunction?" + urldata).done(function(response) {
+          if (response == "ok") {
+            alert("please reboot the device to apply changes");
+          }
+        });
+      }
+    }
+
+    function Gateway_passFunction() {
+      var x = document.getElementById("txtpass");
+      if (x.type === "password") {
+        x.type = "text";
+      } else {
+        x.type = "password";
+      }
+    }
+
+    function Router_passFunction() {
+      var x = document.getElementById("wifi_pass");
+      if (x.type === "password") {
+        x.type = "text";
+      } else {
+        x.type = "password";
+      }
+    }
+
+  </script>
+</body>
+
+</html>

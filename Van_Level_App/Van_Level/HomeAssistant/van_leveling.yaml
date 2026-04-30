@@ -1,0 +1,116 @@
+# File: /config/packages/van_leveling.yaml
+
+sensor:
+  # REST sensor to get both pitch and roll in one request
+  - platform: rest
+    name: "Van Level Data"
+    resource: http://YOUR_IP_HERE/readings
+    method: GET
+    scan_interval: 1
+    value_template: "{{ value_json.pitch }}"  # required, even if we only use attributes
+    json_attributes:
+      - pitch
+      - roll
+    unit_of_measurement: "°"
+
+  # Template sensors for pitch and roll from attributes
+  - platform: template
+    sensors:
+      # dummy sensor to allow placing text on lovelace picture cards
+      van_level_text:
+        friendly_name: "Van Level Text"
+        value_template: " "
+        
+      van_level_pitch:
+        friendly_name: "Van Level Pitch"
+        unit_of_measurement: "°"
+        value_template: "{{ state_attr('sensor.van_level_data', 'pitch') | float | round(1) }}"
+
+      van_level_roll:
+        friendly_name: "Van Level Roll"
+        unit_of_measurement: "°"
+        value_template: "{{ state_attr('sensor.van_level_data', 'roll') | float | round(1) }}"
+
+      van_level_pitch_height:
+        friendly_name: "Van Level Pitch Height"
+        unit_of_measurement: '"'
+        value_template: >
+          {{ ((states('sensor.van_level_pitch') | float | abs) * (3.14159265 / 180)) | tan * 148 | round(2) }}
+
+      van_level_roll_height:
+        friendly_name: "Van Level Roll Height"
+        unit_of_measurement: '"'
+        value_template: >
+          {{ ((states('sensor.van_level_roll') | float | abs) * (3.14159265 / 180)) | tan * 68 | round(2) }}
+
+      van_level_left_front_lift:
+        friendly_name: "Van Level Left Front Lift"
+        unit_of_measurement: '"'
+        value_template: >
+          {% set pitch = states('sensor.van_level_pitch') | float %}
+          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
+          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
+          {% if pitch < 0 and roll < 0 %}
+            0
+          {% elif pitch < 0 and roll >= 0 %}
+            {{ ((roll_height * 4) | round(0)) / 4 }}
+          {% elif pitch >= 0 and roll < 0 %}
+            {{ ((pitch_height * 4) | round(0)) / 4 }}
+          {% else %}
+            {{ (((roll_height + pitch_height) * 4) | round(0)) / 4 }}
+          {% endif %}
+
+      van_level_right_front_lift:
+        friendly_name: "Van Level Right Front Lift"
+        unit_of_measurement: '"'
+        value_template: >
+          {% set pitch = states('sensor.van_level_pitch') | float %}
+          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
+          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
+          {% if pitch < 0 and roll < 0 %}
+            {{ ((roll_height * 4) | round(0)) / 4 }}
+          {% elif pitch < 0 and roll >= 0 %}
+            0
+          {% elif pitch >= 0 and roll < 0 %}
+            {{ (((roll_height + pitch_height) * 4) | round(0)) / 4 }}
+          {% else %}
+            {{ ((pitch_height * 4) | round(0)) / 4 }}
+          {% endif %}
+
+      van_level_right_rear_lift:
+        friendly_name: "Van Level Right Rear Lift"
+        unit_of_measurement: '"'
+        value_template: >
+          {% set pitch = states('sensor.van_level_pitch') | float %}
+          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
+          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
+          {% if pitch < 0 and roll < 0 %}
+            {{ (((roll_height + pitch_height) * 4) | round(0)) / 4 }}
+          {% elif pitch < 0 and roll >= 0 %}
+            {{ ((pitch_height * 4) | round(0)) / 4 }}
+          {% elif pitch >= 0 and roll < 0 %}
+            {{ ((roll_height * 4) | round(0)) / 4 }}
+          {% else %}
+            0
+          {% endif %}
+
+      van_level_left_rear_lift:
+        friendly_name: "Van Level Left Rear Lift"
+        unit_of_measurement: '"'
+        value_template: >
+          {% set pitch = states('sensor.van_level_pitch') | float %}
+          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
+          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
+          {% if pitch < 0 and roll < 0 %}
+            {{ ((pitch_height * 4) | round(0)) / 4 }}
+          {% elif pitch < 0 and roll >= 0 %}
+            {{ (((roll_height + pitch_height) * 4) | round(0)) / 4 }}
+          {% elif pitch >= 0 and roll < 0 %}
+            0
+          {% else %}
+            {{ ((roll_height * 4) | round(0)) / 4 }}
+          {% endif %}
