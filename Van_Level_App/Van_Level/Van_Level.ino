@@ -67,7 +67,7 @@
   #include <Adafruit_ADXL343.h>
 #endif
 
-const char* VERSION = "0.9.3";
+const char* VERSION = "0.9.5";
 
 // SoftAP configuration
 const char * s_configFile = "/APconfig.json"; // SoftAP configuration defaults
@@ -444,7 +444,7 @@ void setup() {
   //  pull-up on GPIO0 like the Devkit V1 boards - you need to add it, or use INPUT_PULLUP.
   //  select the INPUT version below if you have an external pullup resistor.
   pinMode( 0, INPUT_PULLUP);
-  #pinMode( 0, INPUT);
+  //pinMode( 0, INPUT);
  
   Serial.println( "Hold \"BOOT\" button to reset board to defaults");
   delay(3000);
