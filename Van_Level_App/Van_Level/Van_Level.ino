@@ -441,8 +441,11 @@ void setup() {
   // reset board to defaults if necessary (i.e. lost password)
   //  click EN/RESET button, then press and hold BOOT/GPIO0 button for 5 seconds
   //  careful with Adafruit Huzzah ESP32 breakout board, it does not come with 
-  //  pull-up on GPIO0 like the Devkit V1 boards - you need to add it.
-  pinMode( 0, INPUT);
+  //  pull-up on GPIO0 like the Devkit V1 boards - you need to add it, or use INPUT_PULLUP.
+  //  select the INPUT version below if you have an external pullup resistor.
+  pinMode( 0, INPUT_PULLUP);
+  #pinMode( 0, INPUT);
+ 
   Serial.println( "Hold \"BOOT\" button to reset board to defaults");
   delay(3000);
   if (digitalRead( 0) == LOW) { // button is pulled high on hardware, pressing it makes it low
@@ -627,7 +630,11 @@ void setup() {
     String wifi_ssid = request -> getParam("wifi_ssid", true) -> value();
     Serial.println(wifi_ssid);
     String wifi_pass = request -> getParam("wifi_pass", true) -> value();
-    Serial.println(wifi_pass);
+    #ifdef HIDE_PASSWORDS
+      Serial.println( "*Hidden*");
+    #else
+      Serial.println(wifi_pass);
+    #endif
     String wifi_mode = request -> getParam("wifi_mode", true) -> value();
     Serial.println(wifi_mode);
 

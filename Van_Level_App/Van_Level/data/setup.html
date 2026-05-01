@@ -215,8 +215,9 @@
         var txtaplan = $("#txtaplan").val();
         var txtssid = $("#txtssid").val();
         var txtpass = $("#txtpass").val();
-        $.post("/applyBtnFunction?txtaplan=" + txtaplan + "&txtssid=" + txtssid 
-                 + "&txtpass=" + txtpass).done(function(response) {
+        
+        var apData = { txtaplan: txtaplan, txtssid: txtssid, txtpass: txtpass };
+        $.post("/applyBtnFunction", apData).done(function(response) {
           if (response == "ok") {
             alert("please reboot the device to apply changes");
           }
@@ -303,7 +304,7 @@
       if (wifi_ssid == "" || wifi_pass == "") {
         alert("SSID and password can't be empty");
       } else {
-        $.post("/connectBtnFunction?" + urldata).done(function(response) {
+        $.post("/connectBtnFunction?", urldata).done(function(response) {
           if (response == "ok") {
             alert("please reboot the device to apply changes");
           }
