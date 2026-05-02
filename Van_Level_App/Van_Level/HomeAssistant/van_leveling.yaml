@@ -11,110 +11,99 @@ sensor:
     json_attributes:
       - pitch
       - roll
+      - ver
     unit_of_measurement: "°"
 
+template:
   # Template sensors for pitch and roll from attributes
-  - platform: template
-    sensors:
+  - sensor:
       # dummy sensor to allow placing text on lovelace picture cards
-      van_level_text:
-        friendly_name: "Van Level Text"
-        value_template: " "
-        
-      van_level_pitch:
-        friendly_name: "Van Level Pitch"
+      - name: "Van Level Text"
+        unique_id: van_level_text
+        state: " "
+
+      - name: "Van Level Version"
+        unique_id: van_level_version
+        state: "{{ state_attr('sensor.van_level_data', 'ver') | default('Unknown') }}"
+
+      - name: "Van Level Pitch"
+        unique_id: van_level_pitch
         unit_of_measurement: "°"
-        value_template: "{{ state_attr('sensor.van_level_data', 'pitch') | float | round(1) }}"
+        state: "{{ state_attr('sensor.van_level_data', 'pitch') | float(0) | round(1) }}"
 
-      van_level_roll:
-        friendly_name: "Van Level Roll"
+      - name: "Van Level Roll"
+        unique_id: van_level_roll
         unit_of_measurement: "°"
-        value_template: "{{ state_attr('sensor.van_level_data', 'roll') | float | round(1) }}"
+        state: "{{ state_attr('sensor.van_level_data', 'roll') | float(0) | round(1) }}"
 
-      van_level_pitch_height:
-        friendly_name: "Van Level Pitch Height"
+      - name: "Van Level Pitch Height"
+        unique_id: van_level_pitch_height
         unit_of_measurement: '"'
-        value_template: >
-          {{ ((states('sensor.van_level_pitch') | float | abs) * (3.14159265 / 180)) | tan * 148 | round(2) }}
+        state: >
+          {{ ((states('sensor.van_level_pitch') | float(0) | abs) * (3.14159265 / 180)) | tan * 148 | round(2) }}
 
-      van_level_roll_height:
-        friendly_name: "Van Level Roll Height"
+      - name: "Van Level Roll Height"
+        unique_id: van_level_roll_height
         unit_of_measurement: '"'
-        value_template: >
-          {{ ((states('sensor.van_level_roll') | float | abs) * (3.14159265 / 180)) | tan * 68 | round(2) }}
+        state: >
+          {{ ((states('sensor.van_level_roll') | float(0) | abs) * (3.14159265 / 180)) | tan * 68 | round(2) }}
 
-      van_level_left_front_lift:
-        friendly_name: "Van Level Left Front Lift"
+      - name: "Van Level Left Front Lift"
+        unique_id: van_level_left_front_lift
         unit_of_measurement: '"'
-        value_template: >
+        state: >
           {% set fraction = 2 %}
-          {% set pitch = states('sensor.van_level_pitch') | float %}
-          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
+          {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
           {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %}
-            0
-          {% elif pitch < 0 and roll >= 0 %}
-            {{ ((roll_height * fraction) | round(0)) / fraction }}
-          {% elif pitch >= 0 and roll < 0 %}
-            {{ ((pitch_height * fraction) | round(0)) / fraction }}
-          {% else %}
-            {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
+          {% if pitch < 0 and roll < 0 %} 0
+          {% elif pitch < 0 and roll >= 0 %} {{ ((roll_height * fraction) | round(0)) / fraction }}
+          {% elif pitch >= 0 and roll < 0 %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
+          {% else %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
           {% endif %}
 
-      van_level_right_front_lift:
-        friendly_name: "Van Level Right Front Lift"
+      - name: "Van Level Right Front Lift"
+        unique_id: van_level_right_front_lift
         unit_of_measurement: '"'
-        value_template: >
+        state: >
           {% set fraction = 2 %}
-          {% set pitch = states('sensor.van_level_pitch') | float %}
-          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
+          {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
           {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %}
-            {{ ((roll_height * fraction) | round(0)) / fraction }}
-          {% elif pitch < 0 and roll >= 0 %}
-            0
-          {% elif pitch >= 0 and roll < 0 %}
-            {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
-          {% else %}
-            {{ ((pitch_height * fraction) | round(0)) / fraction }}
+          {% if pitch < 0 and roll < 0 %} {{ ((roll_height * fraction) | round(0)) / fraction }}
+          {% elif pitch < 0 and roll >= 0 %} 0
+          {% elif pitch >= 0 and roll < 0 %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
+          {% else %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
           {% endif %}
 
-      van_level_right_rear_lift:
-        friendly_name: "Van Level Right Rear Lift"
+      - name: "Van Level Right Rear Lift"
+        unique_id: van_level_right_rear_lift
         unit_of_measurement: '"'
-        value_template: >
+        state: >
           {% set fraction = 2 %}
-          {% set pitch = states('sensor.van_level_pitch') | float %}
-          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
+          {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
           {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %}
-            {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
-          {% elif pitch < 0 and roll >= 0 %}
-            {{ ((pitch_height * fraction) | round(0)) / fraction }}
-          {% elif pitch >= 0 and roll < 0 %}
-            {{ ((roll_height * fraction) | round(0)) / fraction }}
-          {% else %}
-            0
+          {% if pitch < 0 and roll < 0 %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
+          {% elif pitch < 0 and roll >= 0 %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
+          {% elif pitch >= 0 and roll < 0 %} {{ ((roll_height * fraction) | round(0)) / fraction }}
+          {% else %} 0
           {% endif %}
 
-      van_level_left_rear_lift:
-        friendly_name: "Van Level Left Rear Lift"
+      - name: "Van Level Left Rear Lift"
+        unique_id: van_level_left_rear_lift
         unit_of_measurement: '"'
-        value_template: >
+        state: >
           {% set fraction = 2 %}
-          {% set pitch = states('sensor.van_level_pitch') | float %}
-          {% set roll = states('sensor.van_level_roll') | float %}
+          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
+          {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
           {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %}
-            {{ ((pitch_height * fraction) | round(0)) / fraction }}
-          {% elif pitch < 0 and roll >= 0 %}
-            {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
-          {% elif pitch >= 0 and roll < 0 %}
-            0
-          {% else %}
-            {{ ((roll_height * fraction) | round(0)) / fraction }}
+          {% if pitch < 0 and roll < 0 %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
+          {% elif pitch < 0 and roll >= 0 %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
+          {% elif pitch >= 0 and roll < 0 %} 0
+          {% else %} {{ ((roll_height * fraction) | round(0)) / fraction }}
           {% endif %}

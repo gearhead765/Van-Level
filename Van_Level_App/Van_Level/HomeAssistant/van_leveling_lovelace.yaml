@@ -131,3 +131,13 @@
             color: '#000000'
             font-weight: bold
             font-size: 1.2em
+        - type: state-label
+          entity: sensor.van_level_version
+          prefix: 'v'
+          style:
+            left: 50%
+            top: 68%
+            transform: translate(-50%, -50%)
+            color: '#000000'
+            font-weight: bold
+            font-size: 0.9em # Slightly smaller font for the version
