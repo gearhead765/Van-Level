@@ -89,6 +89,7 @@ float pOffset;
 int pInvert;
 float rOffset;
 int rInvert;
+float blockFraction = 2.0f;  // default to 1/2" block heights
 
 // Timer variables
 unsigned long bootStart = 0;  // if non-zero, will restart when bootStart + bootDelay = now
@@ -101,7 +102,7 @@ unsigned long sensorReadDelay = 40000; // microseconds. 25Hz default
 // IMU filtering (Exponential Moving Average)
 float filteredPitch = 0.0f;
 float filteredRoll = 0.0f;
-const float alpha = 0.05f; // adjust this between 0.01 (heavy smoothing) and 0.9 (light smoothing)
+float alpha = 0.1f; // adjust this between 0.01 (heavy smoothing) and 0.9 (light smoothing)
 
 // Create a sensor object for our MEMS accelerometer
 #if defined(MPU6050)
@@ -338,6 +339,7 @@ String getSensorReadings() {
   imuData["pitch"] = String(finalPitch, 1);
   imuData["roll"] = String(finalRoll, 1);
   imuData["ver"] = String(VERSION);
+  imuData["fraction"] = String(blockFraction, 3);
 
   Serial.print("Filtered Pitch: ");
   Serial.print(finalPitch);
@@ -458,6 +460,9 @@ void setup() {
   rOffset = preferences.getFloat("rOffset", 0.0);
   pInvert = preferences.getInt("pInvert", 1);
   rInvert = preferences.getInt("rInvert", 1);
+  alpha = preferences.getFloat("alpha", 0.1f); // defaults to 0.1 if not set
+  blockFraction = preferences.getFloat("fraction", 2.0f); // defaults to 1/2" blocks
+  
   Serial.print("Stored Calibration values: pOffset=");
   Serial.print(pOffset);
   Serial.print(" pInvert=");
@@ -465,7 +470,11 @@ void setup() {
   Serial.print(" rOffset=");
   Serial.print(rOffset);
   Serial.print(" rInvert=");
-  Serial.println(rInvert);
+  Serial.print(rInvert);
+  Serial.print(" alpha=");
+  Serial.print(alpha);
+  Serial.print(" fraction=");
+  Serial.println(blockFraction);
 
   // retrieve EEPROM AP configuration
   esid = preferences.getString("AP_SSID", "");
@@ -553,6 +562,8 @@ void setup() {
                       + "\",\"wsid\":\"" + wsid + "\",\"apname\":\"" + esid
                       + "\",\"p_offset\":\"" + pOffset + "\",\"p_invert\":\"" + pInvert
                       + "\",\"r_offset\":\"" + rOffset + "\",\"r_invert\":\"" + rInvert
+                      + "\",\"alpha\":\"" + String(alpha, 3)
+					  + "\",\"fraction\":\"" + String(blockFraction, 3)
                       + "\",\"MAC\":\""+ String( WiFi.macAddress()) + "\"}";
     Serial.println(content);
     request -> send(200, "application/json", content);
@@ -703,7 +714,9 @@ void setup() {
     // if unable to parse the offset values, the variables will contain 0 which is okay
     pOffset = (request -> getParam("p_offset") -> value()).toFloat();
     rOffset = (request -> getParam("r_offset") -> value()).toFloat();
- 
+    alpha = (request -> getParam("alpha") -> value()).toFloat();
+    blockFraction = (request -> getParam("fraction") -> value()).toFloat();
+
     // the invert variables will be 0 on failure and those need to be change to 1
     pInvert = (request -> getParam("p_invert") -> value()).toInt();
     rInvert = (request -> getParam("r_invert") -> value()).toInt();
@@ -723,6 +736,8 @@ void setup() {
     preferences.putFloat("rOffset", rOffset);
     preferences.putInt("pInvert", pInvert);
     preferences.putInt("rInvert", rInvert);
+    preferences.putFloat("alpha", alpha);
+    preferences.putFloat("fraction", blockFraction);
 
     Serial.print("Calibration values set: pOffset=");
     Serial.print(pOffset);
@@ -731,7 +746,12 @@ void setup() {
     Serial.print(" rOffset=");
     Serial.print(rOffset);
     Serial.print(" rInvert=");
-    Serial.println(rInvert);
+    Serial.print(rInvert);
+    Serial.print(" alpha=");
+    Serial.print(alpha);
+    Serial.print(" fraction=");
+    Serial.println(blockFraction);
+
     request -> send(200, "text/plain", "ok");
   });
 

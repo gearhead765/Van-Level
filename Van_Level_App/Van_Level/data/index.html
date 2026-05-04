@@ -129,15 +129,14 @@
     const VAN_TYPE = 'Transit';
     const WHEELBASE = 148;
     const TRACK = 68;
-    const FRACTION = 2; // adjust wheel lift values to the nearest 1/n inches
     // Round value to nearest fraction
-    function roundF(value) {
-      var temp = value * FRACTION
+    function roundF(value, fraction) {
+      var temp = value * fraction;
       temp = Math.round(temp);
-      return temp / FRACTION;
+      return temp / fraction;
     }
     // Function to display van information and wheel lift values
-    function displayReadings(pPitch, pRoll, pVer) {
+    function displayReadings(pPitch, pRoll, pVer, pFraction) {
       document.getElementById("info").innerHTML = VAN_TYPE + "<span style=\"font-size: 1vw\"> v" + pVer + "</span><br>"
                                                   + WHEELBASE + "&quot; WB<br>" + TRACK
                                                   + "&quot; Track<br>Pitch: " + pPitch + "&deg;<br>Roll: "
@@ -150,33 +149,33 @@
         document.getElementById("right-front").style.visibility = "visible";
         document.getElementById("right-rear").style.visibility = "visible";
         document.getElementById("left-rear").style.visibility = "visible";
-        document.getElementById("right-front").innerHTML = roundF(roll_height) + "&quot;";
-        document.getElementById("right-rear").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
-        document.getElementById("left-rear").innerHTML = roundF(pitch_height) + "&quot;";
+        document.getElementById("right-front").innerHTML = roundF(roll_height, pFraction) + "&quot;";
+        document.getElementById("right-rear").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
+        document.getElementById("left-rear").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
       } else if (pPitch < 0 && pRoll >= 0) {
         document.getElementById("left-front").style.visibility = "visible";
         document.getElementById("right-front").style.visibility = "hidden";
         document.getElementById("right-rear").style.visibility = "visible";
         document.getElementById("left-rear").style.visibility = "visible";
-        document.getElementById("left-front").innerHTML = roundF(roll_height) + "&quot;";
-        document.getElementById("right-rear").innerHTML = roundF(pitch_height) + "&quot;";
-        document.getElementById("left-rear").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
+        document.getElementById("left-front").innerHTML = roundF(roll_height, pFraction) + "&quot;";
+        document.getElementById("right-rear").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
+        document.getElementById("left-rear").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
       } else if (pPitch >= 0 && pRoll < 0) {
         document.getElementById("left-front").style.visibility = "visible";
         document.getElementById("right-front").style.visibility = "visible";
         document.getElementById("right-rear").style.visibility = "visible";
         document.getElementById("left-rear").style.visibility = "hidden";
-        document.getElementById("left-front").innerHTML = roundF(pitch_height) + "&quot;";
-        document.getElementById("right-front").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
-        document.getElementById("right-rear").innerHTML = roundF(roll_height) + "&quot;";
+        document.getElementById("left-front").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
+        document.getElementById("right-front").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
+        document.getElementById("right-rear").innerHTML = roundF(roll_height, pFraction) + "&quot;";
       } else if (pPitch >= 0 && pRoll >= 0) {
         document.getElementById("left-front").style.visibility = "visible";
         document.getElementById("right-front").style.visibility = "visible";
         document.getElementById("right-rear").style.visibility = "hidden";
         document.getElementById("left-rear").style.visibility = "visible";
-        document.getElementById("left-front").innerHTML = roundF((roll_height + pitch_height)) + "&quot;";
-        document.getElementById("right-front").innerHTML = roundF(pitch_height) + "&quot;";
-        document.getElementById("left-rear").innerHTML = roundF(roll_height) + "&quot;";
+        document.getElementById("left-front").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
+        document.getElementById("right-front").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
+        document.getElementById("left-rear").innerHTML = roundF(roll_height, pFraction) + "&quot;";
       }
     }
     // Function to get current readings on the webpage when it loads for the first time
@@ -186,7 +185,7 @@
         if (this.readyState == 4 && this.status == 200) {
           var myObj = JSON.parse(this.responseText);
           console.log(myObj);
-          displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver);
+          displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction));
         }
       };
       xhr.open("GET", "/readings", true);
@@ -212,7 +211,7 @@
         console.log("new_readings", e.data);
         var myObj = JSON.parse(e.data);
         console.log(myObj);
-        displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver);
+        displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction));
       }, false);
     }
   </script>

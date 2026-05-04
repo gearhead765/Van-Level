@@ -1,7 +1,7 @@
 # File: /config/packages/van_leveling.yaml
 
 sensor:
-  # REST sensor to get both pitch and roll in one request
+  # REST sensor to get pitch, roll, version, and fraction in one request
   - platform: rest
     name: "Van Level Data"
     resource: http://YOUR_IP_HERE/readings
@@ -12,10 +12,11 @@ sensor:
       - pitch
       - roll
       - ver
+      - fraction
     unit_of_measurement: "°"
 
 template:
-  # Template sensors for pitch and roll from attributes
+  # Template sensors for pitch, roll, and calculations
   - sensor:
       # dummy sensor to allow placing text on lovelace picture cards
       - name: "Van Level Text"
@@ -52,7 +53,7 @@ template:
         unique_id: van_level_left_front_lift
         unit_of_measurement: '"'
         state: >
-          {% set fraction = 2 %}
+          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
           {% set pitch = states('sensor.van_level_pitch') | float(0) %}
           {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
@@ -67,7 +68,7 @@ template:
         unique_id: van_level_right_front_lift
         unit_of_measurement: '"'
         state: >
-          {% set fraction = 2 %}
+          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
           {% set pitch = states('sensor.van_level_pitch') | float(0) %}
           {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
@@ -82,7 +83,7 @@ template:
         unique_id: van_level_right_rear_lift
         unit_of_measurement: '"'
         state: >
-          {% set fraction = 2 %}
+          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
           {% set pitch = states('sensor.van_level_pitch') | float(0) %}
           {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
@@ -97,7 +98,7 @@ template:
         unique_id: van_level_left_rear_lift
         unit_of_measurement: '"'
         state: >
-          {% set fraction = 2 %}
+          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
           {% set pitch = states('sensor.van_level_pitch') | float(0) %}
           {% set roll = states('sensor.van_level_roll') | float(0) %}
           {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}

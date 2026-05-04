@@ -128,7 +128,7 @@
                 <div class=text-center>
                   <button class="btn btn-block" type="button" id="con_btn" title=Connect>Apply</button>
                   <p style="color:red; font-size: 60%; text-align: center;">After pressing Apply, press the Reboot button located on the Other tab to activate changes.</p>
-				  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -148,6 +148,16 @@
               <input type="checkbox" id="rollInvert">
               <label for="rollInvert" style="font-size:16px;display:inline"> Reverse direction</label>
               <input type=text id="rollOffset" class=form-control placeholder="0" value="">
+            </div>
+            <div class="col-md-6">
+              <span class="grey-text font-weight-light" style="font-size:20px">Filter Alpha (Smoothing)</span>
+              <p style="font-size:12px; margin-bottom:2px; color:gray;">(0.01 = heavy smoothing, 0.9 = light smoothing)</p>
+              <input type="text" id="filterAlpha" class="form-control" placeholder="0.10" value="">
+            </div>
+            <div class="col-md-6">
+              <span class="grey-text font-weight-light" style="font-size:20px">Block Size (inches)</span>
+              <p style="font-size:12px; margin-bottom:2px; color:gray;">(e.g., enter 0.5 for 1/2" blocks, or 1.5 for 1.5" blocks)</p>
+              <input type="text" id="blockSize" class="form-control" placeholder="0.5" value="">
             </div>
           </div>
           <div class=text-center style="padding-top:10px">
@@ -193,6 +203,17 @@
         $("#txtaplan").text(response.myIP);
         $("#pitchOffset").val(response.p_offset);
         $("#rollOffset").val(response.r_offset);
+        $("#filterAlpha").val(response.alpha);
+        
+        // Convert the backend fraction back to the physical block size
+        var fractionVal = parseFloat(response.fraction);
+        if (fractionVal > 0) {
+          // The '+' sign drops trailing zeros (e.g., 1.500 becomes 1.5)
+          $("#blockSize").val(+(1.0 / fractionVal).toFixed(3));
+        } else {
+          $("#blockSize").val("0.5"); // Fallback just in case
+        }
+        
         $("#txtmac").text(response.MAC);
         
         if (response.p_invert == "-1") {
@@ -241,6 +262,15 @@
         var r_invert = "";
         var p_offset = $("#pitchOffset").val();
         var r_offset = $("#rollOffset").val();
+        var alpha = $("#filterAlpha").val();
+        
+        // Grab the block size and convert it to a fraction for the backend
+        var sizeInput = parseFloat($("#blockSize").val());
+        var fraction = 2.0; // Default to 2 (1/2" blocks) if input is invalid
+        if (sizeInput > 0) {
+          fraction = 1.0 / sizeInput;
+        }
+        
         if (document.getElementById("pitchInvert").checked) {
           p_invert = "-1";
         } else {
@@ -252,7 +282,8 @@
           r_invert = "1";
         }
         $.get("/applyOffsetFunction?p_offset=" + p_offset + "&p_invert=" + p_invert 
-                 + "&r_offset=" + r_offset + "&r_invert=" + r_invert).done(function(response) {
+                 + "&r_offset=" + r_offset + "&r_invert=" + r_invert 
+                 + "&alpha=" + alpha + "&fraction=" + fraction).done(function(response) {
           if (response == "ok") {
             alert("offsets applied");
           }
