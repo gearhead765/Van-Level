@@ -34,3 +34,4 @@ Place the [van_leveling.yaml](Van_Level_App/Van_Level/HomeAssistant/van_leveling
  
  ### Your Van Level Dashboard
  Hopefully, you now have a working Van Level display on your Home Assistant dashboard.
+ ![](Images/ha.png)

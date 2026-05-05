@@ -10,7 +10,7 @@
     - **DC-DC Converter:** [Recom R-78E3.3-0.5](https://www.digikey.com/en/products/detail/recom-power/R-78E3-3-0-5/3593412) 
     - **Phoenix Wire Connector:** [Phoenix Mini Combicon MC 1840366](https://www.digikey.com/en/products/detail/phoenix-contact/1840366/349178) 
     - **Phoenix Board Connector:** [Phoenix Mini Combicon MC 1844210](https://www.digikey.com/en/products/detail/phoenix-contact/1844210/349195)  
-    - **Polyfuse:** [TODO - need link]() 
+    - **Polyfuse:** [1/2Amp PTC Resetable Fuse](https://www.digikey.com/en/products/detail/littelfuse-inc/1812L050-60MR/6234813) 
     - **TVS Diode:** [Littelfuse SZ5KASMC36AT3G](https://www.digikey.com/en/products/detail/littelfuse-inc/SZ5KASMC36AT3G/18716674) 
     - **Reverse Polarity Protection:** [Onsemi SS14](https://www.digikey.com/en/products/detail/onsemi/SS14/965474) 
 - **Project Box:**  [Hammond 1551KFLBK](https://www.digikey.com/en/products/detail/hammond-manufacturing/1551KFLBK/2094805)
@@ -19,8 +19,7 @@
 
 ## Modifications to Off the Shelf Hardware
 The Hammond enclosure will need a cutout for the Phoenix power connector.  The top will need a tall opening, while the bottom will need the lip removed in the connector area.  Two small washers can be 3D printed to lift the board just a little so the IMU board will clear the lid.
-
-![](Images/cad1.png)|![](Images/cad2.png)
+<br>![](Images/cad1.png)![](Images/cad2.png)
 
 [Box cutout dimensions](<CAD Model/box_machining.pdf>)<br>
 [Lid cutout dimensions](<CAD Model/lid_machining.pdf>)
@@ -36,4 +35,4 @@ The boards were produced by [OSHPark](https://oshpark.com/shared_projects/d4r7hp
 
 ![](Images/van_level_pcb.png)
 
-Assembly is straight forward.  Solder the lowest components first.  The Huzzah board was mounted on headers, but the IMU board was mounted directly on top of the carrier board.
+Assembly is straight forward.  Solder the lowest components first.  The Huzzah board was mounted on headers, but the IMU board was mounted directly on top of the carrier board to allow the IMU board to clear the inside of the box.
