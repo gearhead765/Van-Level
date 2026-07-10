@@ -24,7 +24,7 @@
         - type: conditional
           conditions:
             - entity: sensor.van_level_left_front_lift
-              state_not: '0'
+              state_not: '0.0'
           elements:
             - type: state-label
               entity: sensor.van_level_left_front_lift
@@ -34,12 +34,12 @@
                 transform: translate(-50%, 50%)
                 color: white
                 background: rgba(0, 0, 0, 0.5)
-                padding: 0px
+                padding: 4px
                 border-radius: 4px
         - type: conditional
           conditions:
             - entity: sensor.van_level_right_front_lift
-              state_not: '0'
+              state_not: '0.0'
           elements:
             - type: state-label
               entity: sensor.van_level_right_front_lift
@@ -49,12 +49,12 @@
                 transform: translate(-50%, -50%)
                 color: white
                 background: rgba(0, 0, 0, 0.5)
-                padding: 0px
+                padding: 4px
                 border-radius: 4px
         - type: conditional
           conditions:
             - entity: sensor.van_level_right_rear_lift
-              state_not: '0'
+              state_not: '0.0'
           elements:
             - type: state-label
               entity: sensor.van_level_right_rear_lift
@@ -64,12 +64,12 @@
                 transform: translate(50%, -50%)
                 color: white
                 background: rgba(0, 0, 0, 0.5)
-                padding: 0px
+                padding: 4px
                 border-radius: 4px
         - type: conditional
           conditions:
             - entity: sensor.van_level_left_rear_lift
-              state_not: '0'
+              state_not: '0.0'
           elements:
             - type: state-label
               entity: sensor.van_level_left_rear_lift
@@ -79,65 +79,157 @@
                 transform: translate(50%, 50%)
                 color: white
                 background: rgba(0, 0, 0, 0.5)
-                padding: 0px
+                padding: 4px
                 border-radius: 4px
-        - type: state-label
-          entity: sensor.van_level_text
-          prefix: Transit T-350 EXT HR
-          style:
-            left: 50%
-            top: 38%
-            transform: translate(-50%, -50%)
-            color: '#000000'
-            font-weight: bold
-            font-size: 1.2em
-        - type: state-label
-          entity: sensor.van_level_text
-          prefix: 148in WB
-          style:
-            left: 50%
-            top: 44%
-            transform: translate(-50%, -50%)
-            color: '#000000'
-            font-weight: bold
-            font-size: 1.2em
-        - type: state-label
-          entity: sensor.van_level_text
-          prefix: 68in Track
-          style:
-            left: 50%
-            top: 50%
-            transform: translate(-50%, -50%)
-            color: '#000000'
-            font-weight: bold
-            font-size: 1.2em
-        - type: state-label
-          entity: sensor.van_level_pitch
-          prefix: 'Pitch: '
-          style:
-            left: 50%
-            top: 56%
-            transform: translate(-50%, -50%)
-            color: '#000000'
-            font-weight: bold
-            font-size: 1.2em
-        - type: state-label
-          entity: sensor.van_level_roll
-          prefix: 'Roll: '
-          style:
-            left: 50%
-            top: 62%
-            transform: translate(-50%, -50%)
-            color: '#000000'
-            font-weight: bold
-            font-size: 1.2em
-        - type: state-label
-          entity: sensor.van_level_version
-          prefix: 'v'
-          style:
-            left: 50%
-            top: 68%
-            transform: translate(-50%, -50%)
-            color: '#000000'
-            font-weight: bold
-            font-size: 0.9em # Slightly smaller font for the version
+
+        # Center text when not level
+        - type: conditional
+          conditions:
+            - entity: binary_sensor.van_ok_level
+              state: 'off'
+          elements:
+            - type: state-label
+              entity: sensor.van_level_text
+              prefix: Transit T-350 EXT HR
+              style:
+                left: 50%
+                top: 38%
+                transform: translate(-50%, -50%)
+                color: '#000000'
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_text
+              prefix: 148in WB
+              style:
+                left: 50%
+                top: 44%
+                transform: translate(-50%, -50%)
+                color: '#000000'
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_text
+              prefix: 68in Track
+              style:
+                left: 50%
+                top: 50%
+                transform: translate(-50%, -50%)
+                color: '#000000'
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_pitch
+              prefix: 'Pitch: '
+              style:
+                left: 50%
+                top: 56%
+                transform: translate(-50%, -50%)
+                color: '#000000'
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_roll
+              prefix: 'Roll: '
+              style:
+                left: 50%
+                top: 62%
+                transform: translate(-50%, -50%)
+                color: '#000000'
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_version
+              prefix: 'v'
+              style:
+                left: 50%
+                top: 68%
+                transform: translate(-50%, -50%)
+                color: '#000000'
+                font-weight: bold
+                font-size: 0.9em  # Slightly smaller font for the version
+
+        # Center text when level (green background)
+        - type: conditional
+          conditions:
+            - entity: binary_sensor.van_ok_level
+              state: 'on'
+          elements:
+            - type: state-label
+              entity: sensor.van_level_text
+              prefix: Transit T-350 EXT HR
+              style:
+                left: 50%
+                top: 38%
+                transform: translate(-50%, -50%)
+                color: '#ffffff'
+                background: '#2ecc71'
+                padding: 2px 8px
+                border-radius: 4px
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_text
+              prefix: 148in WB
+              style:
+                left: 50%
+                top: 44%
+                transform: translate(-50%, -50%)
+                color: '#ffffff'
+                background: '#2ecc71'
+                padding: 2px 8px
+                border-radius: 4px
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_text
+              prefix: 68in Track
+              style:
+                left: 50%
+                top: 50%
+                transform: translate(-50%, -50%)
+                color: '#ffffff'
+                background: '#2ecc71'
+                padding: 2px 8px
+                border-radius: 4px
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_pitch
+              prefix: 'Pitch: '
+              style:
+                left: 50%
+                top: 56%
+                transform: translate(-50%, -50%)
+                color: '#ffffff'
+                background: '#2ecc71'
+                padding: 2px 8px
+                border-radius: 4px
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_roll
+              prefix: 'Roll: '
+              style:
+                left: 50%
+                top: 62%
+                transform: translate(-50%, -50%)
+                color: '#ffffff'
+                background: '#2ecc71'
+                padding: 2px 8px
+                border-radius: 4px
+                font-weight: bold
+                font-size: 1.2em
+            - type: state-label
+              entity: sensor.van_level_version
+              prefix: 'v'
+              style:
+                left: 50%
+                top: 68%
+                transform: translate(-50%, -50%)
+                color: '#ffffff'
+                background: '#2ecc71'
+                padding: 2px 6px
+                border-radius: 4px
+                font-weight: bold
+                font-size: 0.9em  # Slightly smaller font for the version

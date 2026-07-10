@@ -67,7 +67,7 @@
   #include <Adafruit_ADXL343.h>
 #endif
 
-const char* VERSION = "0.9.5";
+const char* VERSION = "1.0.0";
 
 // SoftAP configuration
 const char * s_configFile = "/APconfig.json"; // SoftAP configuration defaults
@@ -341,6 +341,10 @@ String getSensorReadings() {
   imuData["ver"] = String(VERSION);
   imuData["fraction"] = String(blockFraction, 3);
 
+  const float TOLERANCE = 0.15f;  // degrees
+  bool isLevel = (fabs(finalPitch) <= TOLERANCE) && (fabs(finalRoll) <= TOLERANCE);
+  imuData["lvl"] = isLevel; 
+
   Serial.print("Filtered Pitch: ");
   Serial.print(finalPitch);
   Serial.print(", Filtered Roll: ");
@@ -351,53 +355,38 @@ String getSensorReadings() {
   return jsonString;
 }
 
-// Function to test WiFi connection reverting to SoftAP if unsuccessful
-bool testWifi(void) {
-  int c = 0;
-  Serial.print("Waiting for Wifi to connect. Status: ");
-  
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.begin(wsid.c_str(), wpass.c_str());
-
-  while (c < 30) {
-    Serial.print(WiFi.status());
-    Serial.print(",");
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.print("\nYou are connected to: ");
-      localIP = WiFi.localIP().toString();
-      Serial.println(localIP);
-      return true;
-    }
-    delay(500);
-    c++;
-  }
-
-  Serial.println("");
-  Serial.println("STA connect timed out, opening SoftAP");
-  localIP = "Not Connected";
-  WiFi.mode(WIFI_AP);
-  return false;
-}
-
-// Function to watch for SoftAP connection events
-//   We only want one SoftAP connection. For basic security, we rely
-//   on the AP password to limit who can change our configuration.
+// Function to watch for connection events
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  // We only want one SoftAP connection. For basic security, we rely
+  // on the AP password to limit who can change our configuration.
   switch (event) {
     case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
       apConnected = false;
       Serial.println("SoftAP client disconnected");
       break;
     case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
-      // save the IP to compare to config page requestor
       apConnected = true;
       Serial.println("SoftAP client connected");
+      break;
+      
+    // grab our assigned IP when connecting to a network
+    case ARDUINO_EVENT_WIFI_STA_START:
+      Serial.println("Wi-Fi Station started. Connecting...");
+      break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+      Serial.print("Successfully connected to router! IP: ");
+      localIP = WiFi.localIP().toString();
+      Serial.println(localIP);
+      break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      Serial.println("Lost connection to router. Background auto-reconnect active...");
+      localIP = "Not Connected";
       break;
     default:
       break;
   }
 }
-
+  
 //####################################  BEGIN SETUP  ##################################
 void setup() {
   Serial.begin(115200);
@@ -810,12 +799,16 @@ void setup() {
     localIP = "network not set";
   }
 
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.setAutoReconnect(true); // Tells the ESP32 internal core to reconnect automatically
+
   if (wmode == "dhcp") {
-    Serial.println("Obtaining DHCP address");
-    testWifi();
+    Serial.println("Initiating background DHCP connection...");
+    WiFi.begin(wsid.c_str(), wpass.c_str());
   }
 
   if (wmode == "static") {
+    Serial.println("Configuring Static IP settings...");
     String static_ip = preferences.getString("WIFI_IP", "");
     Serial.println("Using WiFi static address: ");
     Serial.print("static_ip: ");
@@ -845,10 +838,11 @@ void setup() {
     secondaryDNS.fromString(s_dns);
 
     if (!WiFi.config(s_ip, gateway, subnet, primaryDNS, secondaryDNS)) {
-      Serial.println("STA Failed to configure");
+      Serial.println("STA Failed to configure static IP");
     }
 
-    testWifi();
+    Serial.println("Initiating background Static IP connection...");
+    WiFi.begin(wsid.c_str(), wpass.c_str());
   }
 
   server.begin(); // start the webserver for the Access Point and Station
@@ -882,10 +876,5 @@ void loop() {
       events.send(getSensorReadings().c_str(), "new_readings", millis());
       lastWebTime = millis();
     }
-  }
-  
-  // attempt to reconnect to WiFi if disconnected for any reason
-  if (wsid.length() > 0 && wpass.length() > 0 && WiFi.status() != WL_CONNECTED) {
-    testWifi();
   }
 }

@@ -1,22 +1,30 @@
 # File: /config/packages/van_leveling.yaml
 
-sensor:
-  # REST sensor to get pitch, roll, version, and fraction in one request
-  - platform: rest
-    name: "Van Level Data"
-    resource: http://YOUR_IP_HERE/readings
+rest:
+  - resource: http://YOUR_IP_HERE/readings
     method: GET
     scan_interval: 1
-    value_template: "{{ value_json.pitch }}"  # required, even if we only use attributes
-    json_attributes:
-      - pitch
-      - roll
-      - ver
-      - fraction
-    unit_of_measurement: "°"
+    sensor:
+      - name: "Van Level Data"
+        unique_id: van_level_data
+        value_template: "{{ value_json.pitch }}"  # required, even if we only use attributes
+        unit_of_measurement: "°"
+        # Prevents UI flickering if a network packet drops
+        availability: "{{ value_json is defined and value_json.pitch is defined }}"
+        json_attributes:
+          - pitch
+          - roll
+          - ver
+          - fraction
+          - lvl
 
 template:
-  # Template sensors for pitch, roll, and calculations
+  - binary_sensor:
+      - name: "Van OK Level"
+        unique_id: van_ok_level
+        state: "{{ state_attr('sensor.van_level_data', 'lvl') | bool(false) }}"
+        
+  # Sensors for pitch, roll, and calculations
   - sensor:
       # dummy sensor to allow placing text on lovelace picture cards
       - name: "Van Level Text"

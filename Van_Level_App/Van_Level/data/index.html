@@ -136,7 +136,7 @@
       return temp / fraction;
     }
     // Function to display van information and wheel lift values
-    function displayReadings(pPitch, pRoll, pVer, pFraction) {
+    function displayReadings(pPitch, pRoll, pVer, pFraction, pLvl) {
       document.getElementById("info").innerHTML = VAN_TYPE + "<span style=\"font-size: 1vw\"> v" + pVer + "</span><br>"
                                                   + WHEELBASE + "&quot; WB<br>" + TRACK
                                                   + "&quot; Track<br>Pitch: " + pPitch + "&deg;<br>Roll: "
@@ -177,6 +177,12 @@
         document.getElementById("right-front").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
         document.getElementById("left-rear").innerHTML = roundF(roll_height, pFraction) + "&quot;";
       }
+      
+      if (pLvl) {
+        document.body.style.backgroundColor = "#2ecc71"; // Level Green
+      } else {
+        document.body.style.backgroundColor = "#ffffff"; // Default White
+      }
     }
     // Function to get current readings on the webpage when it loads for the first time
     function getReadings() {
@@ -185,7 +191,7 @@
         if (this.readyState == 4 && this.status == 200) {
           var myObj = JSON.parse(this.responseText);
           console.log(myObj);
-          displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction));
+          displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction), myObj.lvl);
         }
       };
       xhr.open("GET", "/readings", true);
@@ -211,7 +217,7 @@
         console.log("new_readings", e.data);
         var myObj = JSON.parse(e.data);
         console.log(myObj);
-        displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction));
+        displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction), myObj.lvl);
       }, false);
     }
   </script>
