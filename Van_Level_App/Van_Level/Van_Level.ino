@@ -67,7 +67,7 @@
   #include <Adafruit_ADXL343.h>
 #endif
 
-const char* VERSION = "1.0.0";
+const char* VERSION = "1.0.1";
 
 // SoftAP configuration
 const char * s_configFile = "/APconfig.json"; // SoftAP configuration defaults
@@ -89,6 +89,8 @@ float pOffset;
 int pInvert;
 float rOffset;
 int rInvert;
+float pTolerance = 0.15f;  // in degrees
+float rTolerance = 0.15f;
 float blockFraction = 2.0f;  // default to 1/2" block heights
 
 // Timer variables
@@ -341,10 +343,9 @@ String getSensorReadings() {
   imuData["ver"] = String(VERSION);
   imuData["fraction"] = String(blockFraction, 3);
 
-  const float TOLERANCE = 0.15f;  // degrees
-  bool isLevel = (fabs(finalPitch) <= TOLERANCE) && (fabs(finalRoll) <= TOLERANCE);
-  imuData["lvl"] = isLevel; 
-
+  bool isLevel = (fabsf(finalPitch) <= pTolerance) && (fabsf(finalRoll) <= rTolerance);
+  imuData["lvl"] = isLevel;
+  
   Serial.print("Filtered Pitch: ");
   Serial.print(finalPitch);
   Serial.print(", Filtered Roll: ");
@@ -451,6 +452,8 @@ void setup() {
   rInvert = preferences.getInt("rInvert", 1);
   alpha = preferences.getFloat("alpha", 0.1f); // defaults to 0.1 if not set
   blockFraction = preferences.getFloat("fraction", 2.0f); // defaults to 1/2" blocks
+  pTolerance = preferences.getFloat("pTolerance", 0.15f);
+  rTolerance = preferences.getFloat("rTolerance", 0.15f); 
   
   Serial.print("Stored Calibration values: pOffset=");
   Serial.print(pOffset);
@@ -463,7 +466,11 @@ void setup() {
   Serial.print(" alpha=");
   Serial.print(alpha);
   Serial.print(" fraction=");
-  Serial.println(blockFraction);
+  Serial.print(blockFraction);
+  Serial.print(" pTolerance=");
+  Serial.print(pTolerance);
+  Serial.print(" rTolerance=");
+  Serial.println(rTolerance);
 
   // retrieve EEPROM AP configuration
   esid = preferences.getString("AP_SSID", "");
@@ -552,7 +559,9 @@ void setup() {
                       + "\",\"p_offset\":\"" + pOffset + "\",\"p_invert\":\"" + pInvert
                       + "\",\"r_offset\":\"" + rOffset + "\",\"r_invert\":\"" + rInvert
                       + "\",\"alpha\":\"" + String(alpha, 3)
-					  + "\",\"fraction\":\"" + String(blockFraction, 3)
+                      + "\",\"fraction\":\"" + String(blockFraction, 3)
+                      + "\",\"p_tolerance\":\"" + String(pTolerance, 2)
+                      + "\",\"r_tolerance\":\"" + String(rTolerance, 2)
                       + "\",\"MAC\":\""+ String( WiFi.macAddress()) + "\"}";
     Serial.println(content);
     request -> send(200, "application/json", content);
@@ -705,7 +714,9 @@ void setup() {
     rOffset = (request -> getParam("r_offset") -> value()).toFloat();
     alpha = (request -> getParam("alpha") -> value()).toFloat();
     blockFraction = (request -> getParam("fraction") -> value()).toFloat();
-
+    pTolerance = (request -> getParam("p_tolerance") -> value()).toFloat();
+    rTolerance = (request -> getParam("r_tolerance") -> value()).toFloat();
+    
     // the invert variables will be 0 on failure and those need to be change to 1
     pInvert = (request -> getParam("p_invert") -> value()).toInt();
     rInvert = (request -> getParam("r_invert") -> value()).toInt();
@@ -727,7 +738,9 @@ void setup() {
     preferences.putInt("rInvert", rInvert);
     preferences.putFloat("alpha", alpha);
     preferences.putFloat("fraction", blockFraction);
-
+    preferences.putFloat("pTolerance", pTolerance);
+    preferences.putFloat("rTolerance", rTolerance);
+    
     Serial.print("Calibration values set: pOffset=");
     Serial.print(pOffset);
     Serial.print(" pInvert=");
@@ -739,8 +752,12 @@ void setup() {
     Serial.print(" alpha=");
     Serial.print(alpha);
     Serial.print(" fraction=");
-    Serial.println(blockFraction);
-
+    Serial.print(blockFraction);
+    Serial.print(" pTolerance=");
+    Serial.print(pTolerance);
+    Serial.print(" rTolerance=");
+    Serial.println(rTolerance);
+    
     request -> send(200, "text/plain", "ok");
   });
 
