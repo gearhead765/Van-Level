@@ -67,7 +67,7 @@
   #include <Adafruit_ADXL343.h>
 #endif
 
-const char* VERSION = "1.0.1";
+const char* VERSION = "1.0.2";
 
 // SoftAP configuration
 const char * s_configFile = "/APconfig.json"; // SoftAP configuration defaults
@@ -89,8 +89,8 @@ float pOffset;
 int pInvert;
 float rOffset;
 int rInvert;
-float pTolerance = 0.15f;  // in degrees
-float rTolerance = 0.15f;
+float pTolerance = 1.0f;  // "level" if within tolerance degrees
+float rTolerance = 1.0f;
 float blockFraction = 2.0f;  // default to 1/2" block heights
 
 // Timer variables
@@ -100,6 +100,8 @@ unsigned long lastWebTime = 0; // IMU data webpage push
 const unsigned long webDelay = 1000; // refresh webpage every second
 unsigned long lastSensorReadTime = 0;
 unsigned long sensorReadDelay = 40000; // microseconds. 25Hz default
+unsigned long lastWifiCheck = 0;
+const unsigned long wifiCheckInterval = 15000; // Check connection status every 15 seconds
 
 // IMU filtering (Exponential Moving Average)
 float filteredPitch = 0.0f;
@@ -527,32 +529,32 @@ void setup() {
     request -> send(404, "text/html", "<h1 align=\"center\">Oops! It's not here.</h1>");
   });
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     // our van level image page with blocking stack heights
     request -> send(LittleFS, "/index.html", "text/html");
   });
 
-  server.on("/setup", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/setup", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     if(!request->authenticate(esid.c_str(), epass.c_str()))
       return request->requestAuthentication();
     request -> send(LittleFS, "/setup.html", "text/html");
   });
 
-  server.on("/setup.html", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/setup.html", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     if(!request->authenticate(esid.c_str(), epass.c_str()))
       return request->requestAuthentication();
     request -> send(LittleFS, "/setup.html", "text/html");
   });
 
   // server callback for RESTful IMU update readings
-  server.on( "/readings", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on( "/readings", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest *request){
     Serial.println( "RESTful query");
     String json = getSensorReadings();
     request->send( 200, "application/json", json);
   });
 
   // server callback button handlers
-  server.on("/setupData", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/setupData", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     Serial.println( "Fetching Offsets");
     String content = String("{\"ver\":\"") + VERSION + "\",\"myIP\":\"" + myIP + "\",\"localIP\":\"" + localIP
                       + "\",\"wsid\":\"" + wsid + "\",\"apname\":\"" + esid
@@ -567,7 +569,7 @@ void setup() {
     request -> send(200, "application/json", content);
   });
 
-  server.on("/scanWifi", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/scanWifi", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     Serial.println( "Scanning Wifi");
     String scan_wifi = request -> getParam("scan_wifi") -> value();
     if (scan_wifi) {
@@ -601,7 +603,7 @@ void setup() {
     }
   });
 
-  server.on("/applyBtnFunction", HTTP_POST, [](AsyncWebServerRequest * request) {
+  server.on("/applyBtnFunction", WebRequestMethod::HTTP_POST, [](AsyncWebServerRequest * request) {
     Serial.println( "Assigning AP");
     String txtssid = request -> getParam("txtssid", true) -> value();
     String txtpass = request -> getParam("txtpass", true) -> value();
@@ -634,7 +636,7 @@ void setup() {
     request -> send(200, "text/plain", "ok");
   });
 
-  server.on("/connectBtnFunction", HTTP_POST, [](AsyncWebServerRequest * request) {
+  server.on("/connectBtnFunction", WebRequestMethod::HTTP_POST, [](AsyncWebServerRequest * request) {
     Serial.println( "Assigning Wifi");
     String wifi_ssid = request -> getParam("wifi_ssid", true) -> value();
     Serial.println(wifi_ssid);
@@ -707,7 +709,7 @@ void setup() {
     request -> send(200, "text/plain", "ok");
   });
 
-  server.on("/applyOffsetFunction", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/applyOffsetFunction", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     Serial.println( "Assigning Offsets");
     // if unable to parse the offset values, the variables will contain 0 which is okay
     pOffset = (request -> getParam("p_offset") -> value()).toFloat();
@@ -761,7 +763,7 @@ void setup() {
     request -> send(200, "text/plain", "ok");
   });
 
-  server.on("/rebootBtnFunction", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/rebootBtnFunction", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     Serial.println( "Requesting Restart");
     if (request -> getParam("reboot_btn") -> value() == "reboot_device") {
       Serial.println("restarting device");
@@ -771,7 +773,7 @@ void setup() {
     }
   });
 
-  server.on("/resetBtnFunction", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/resetBtnFunction", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     Serial.println( "Requesting Reset");
     if (request -> getParam("reset_btn") -> value() == "reset_device") {
       preferences.clear();
@@ -865,8 +867,7 @@ void setup() {
   server.begin(); // start the webserver for the Access Point and Station
   
   // start the OTA service using our SoftAP credentials
-  ElegantOTA.begin(&server);
-  ElegantOTA.setAuth(esid.c_str(), epass.c_str());
+  ElegantOTA.begin(&server, esid.c_str(), epass.c_str());
 }
 
 //####################################  BEGIN LOOP  ##################################
@@ -877,6 +878,16 @@ void loop() {
     // received a reboot request from the setup page
     if ((millis() - bootStart) > bootDelay) {
       ESP.restart();
+    }
+  }
+  
+  // Periodically check Wi-Fi connection and attempt reconnect if disconnected
+  if (millis() - lastWifiCheck >= wifiCheckInterval) {
+    lastWifiCheck = millis();
+    if (WiFi.status() != WL_CONNECTED && wsid.length() > 0 && wsid != "Not Given") {
+      Serial.println("Wi-Fi network unavailable or disconnected. Retrying connection...");
+      WiFi.disconnect();
+      WiFi.reconnect();
     }
   }
   
