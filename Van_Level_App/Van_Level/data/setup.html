@@ -6,131 +6,594 @@
   <meta http-equiv=X-UA-Compatible content=IE=edge>
   <meta name=viewport content="width=device-width, initial-scale=1">
   <title>Van Level Setup</title>
-  <link href=css/bootstrap.min.css rel=stylesheet>
-  <link href=css/pixie-main.css rel=stylesheet>
   <link rel="icon" type="image/png" href="images/favicon.png">
+  <style>
+    :root {
+      --space-1: 8px;
+      --space-2: 12px;
+      --space-3: 16px;
+      --space-4: 20px;
+      --space-5: 24px;
+      --text-xs: 12px;
+      --text-sm: 13px;
+      --text-md: 15px;
+      --text-lg: 16px;
+      --text-xl: 18px;
+      color-scheme: light dark;
+      --muted: #475569;
+      --note: #d14343;
+      --bg: #f3f6fa;
+      --text: #1f2a37;
+      --card: #ffffff;
+      --border: #dfe5ee;
+      --border-soft: #e5e7eb;
+      --border-faint: #edf1f5;
+      --shadow: rgba(15, 23, 42, 0.06);
+      --tab-bg: #aebdd2;
+      --tab-text: #ffffff;
+      --tab-active-bg: #dfe5ee;
+      --tab-active-text: #1f2937;
+      --active-icon-filter: none;
+      --input-bg: #ffffff;
+      --input-border: #d9e1ea;
+      --input-text: #1f2937;
+      --focus: #7aa7ff;
+      --panel-bg: #f9fafb;
+      --panel-head: #f3f6fa;
+      --helper: #6b7280;
+      --good: #166534;
+      --warn: #92400e;
+      --bad: #991b1b;
+      --neutral: #334155;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --muted: #a8b3c4;
+        --note: #f87171;
+        --bg: #0f141b;
+        --text: #e2e8f0;
+        --card: #19202a;
+        --border: #2b3544;
+        --border-soft: #2b3544;
+        --border-faint: #252e3b;
+        --shadow: rgba(0, 0, 0, 0.4);
+        --tab-bg: #2a3444;
+        --tab-text: #cbd5e1;
+        --tab-active-bg: #3a4a60;
+        --tab-active-text: #f1f5f9;
+        --active-icon-filter: brightness(0) invert(1);
+        --input-bg: #121820;
+        --input-border: #384456;
+        --input-text: #e2e8f0;
+        --focus: #5b8def;
+        --panel-bg: #1d2530;
+        --panel-head: #232d3b;
+        --helper: #94a3b8;
+        --good: #86efac;
+        --warn: #fcd34d;
+        --bad: #fca5a5;
+        --neutral: #cbd5e1;
+      }
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 24px 12px;
+      font-size: var(--text-md);
+    }
+
+    .main-box {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px var(--shadow);
+      padding: 20px;
+    }
+
+    .setup-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 var(--space-4);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 0;
+      list-style: none;
+    }
+
+    .setup-tabs li {
+      margin: 0;
+    }
+
+    .setup-tabs a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      color: var(--tab-text);
+      text-decoration: none;
+      font-weight: 600;
+      background: var(--tab-bg);
+    }
+
+    .setup-tabs li.active a {
+      background: var(--tab-active-bg);
+      color: var(--tab-active-text);
+      border-color: var(--tab-active-bg);
+      border-bottom: 1px solid var(--tab-active-bg);
+      margin-bottom: -1px;
+    }
+
+    .setup-tabs img {
+      width: 18px;
+      height: 18px;
+      opacity: 1;
+      filter: brightness(0) invert(1);
+    }
+
+    .setup-tabs li.active a img {
+      filter: var(--active-icon-filter);
+    }
+
+    .default-pass-warning {
+      display: none;
+      margin: 0 0 var(--space-4);
+      padding: 10px 14px;
+      border: 1px solid var(--note);
+      border-radius: 8px;
+      color: var(--note);
+      font-size: var(--text-sm);
+      font-weight: 600;
+    }
+
+    .status-msg {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      text-align: left;
+    }
+
+    .status-msg.show {
+      display: block;
+    }
+
+    .status-msg.success {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--good);
+    }
+
+    .status-msg.error {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--bad);
+    }
+
+    .status-msg.info {
+      background: rgba(100, 116, 139, 0.12);
+      color: var(--neutral);
+    }
+
+    .tab-content {
+      padding-top: var(--space-1);
+    }
+
+    .tab-pane {
+      display: none;
+      padding-top: 4px;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .tab-pane > h4,
+    .tab-pane > .network-panel > h4 {
+      margin: 0 0 var(--space-4);
+      font-size: var(--text-xl);
+      font-weight: 700;
+    }
+
+    .row {
+      margin-left: -8px;
+      margin-right: -8px;
+    }
+
+    .col-md-6 {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    #calibrate .col-md-6,
+    #vehicle .col-md-6 {
+      margin-bottom: var(--space-5);
+    }
+
+    .tab-pane > form,
+    .tab-pane > .network-panel,
+    .tab-pane > .form-group,
+    .tab-pane .row,
+    .tab-pane .control-row,
+    .tab-pane .text-center {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 var(--space-4);
+      font-size: var(--text-lg);
+    }
+
+    .table td {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-faint);
+      vertical-align: middle;
+    }
+
+    .table td:last-child {
+      text-align: right;
+    }
+
+    .wifi-status {
+      display: inline-block;
+      min-width: 118px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    .wifi-status.good {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--good);
+    }
+
+    .wifi-status.warn {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--warn);
+    }
+
+    .wifi-status.bad {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--bad);
+    }
+
+    .wifi-status.neutral {
+      background: rgba(100, 116, 139, 0.12);
+      color: var(--neutral);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-3);
+    }
+
+    .tab-pane .form-group {
+      margin-bottom: var(--space-3);
+    }
+
+    .form-control {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      background: var(--input-bg);
+      font-size: var(--text-md);
+      color: var(--input-text);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+
+    .grey-text {
+      display: block;
+      margin-bottom: var(--space-1);
+      font-size: var(--text-lg);
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #1f6feb;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: #1557c0;
+      color: white;
+      text-decoration: none;
+    }
+
+    .inline-check-label {
+      font-size: 14px;
+      display: inline;
+      vertical-align: middle;
+    }
+
+    .button-row {
+      padding-top: 10px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+      margin: 0;
+    }
+
+    .control-block {
+      display: block;
+    }
+
+    .update-link {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 8px;
+    }
+
+    .network-panel {
+      margin: 0;
+    }
+
+    .panel-group,
+    .panel,
+    .panel-heading,
+    .panel-body,
+    .panel-collapse {
+      all: revert;
+    }
+
+    #network .panel {
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      background: var(--panel-bg);
+      overflow: hidden;
+    }
+
+    #network .panel-heading {
+      background: var(--panel-head);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 12px 16px;
+    }
+
+    #network .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    #network .panel-body {
+      padding: 16px;
+    }
+
+    .static-network-settings {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-faint);
+    }
+
+    .require {
+      color: #d14343;
+      font-weight: 700;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 6px;
+    }
+
+    label {
+      font-weight: 500;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .action-note {
+      margin-top: 10px;
+      margin-bottom: 0;
+      font-size: 12px;
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: var(--helper);
+      margin: 0 0 var(--space-2);
+    }
+
+    .small-red-note {
+      color: var(--note);
+      font-size: 12px;
+      text-align: center;
+      margin: 0;
+    }
+
+    .small-red-left {
+      color: var(--note);
+      font-size: 12px;
+      text-align: left;
+      margin: 0;
+    }
+
+    @media (max-width: 640px) {
+      .main-box {
+        padding: 14px;
+      }
+
+      .setup-tabs {
+        display: block;
+      }
+
+      .setup-tabs li {
+        margin-bottom: 8px;
+      }
+
+      .setup-tabs a {
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+    }
+  </style>
 </head>
 
 <body>
   <div class=main-box>
-    <ul class="nav nav-pills">
+    <div id="defaultPassWarning" class="default-pass-warning">
+      The Access Point is still using the default password. Change it under Access Point Configuration on the Status tab, then reboot.
+    </div>
+    <ul class="setup-tabs">
       <li class=active>
-        <a data-toggle=pill href=#status> <img src=images/status.png alt>Status</a>
+        <a href=#status> <img src=images/status.png alt>Status</a>
       </li>
       <li>
-        <a data-toggle=pill href=#network> <img src=images/network.png alt>Network</a>
+        <a href=#network> <img src=images/network.png alt>Network</a>
       </li>
       <li>
-        <a data-toggle=pill href=#calibrate> <img src=images/calibrate.png alt>Calibration</a>
+        <a href=#calibrate> <img src=images/calibrate.png alt>Calibration</a>
       </li>
       <li>
-        <a data-toggle=pill href=#other> <img src=images/other.png alt>Other</a>
+        <a href=#vehicle> <img src=images/vehicle.png alt>Vehicle Info</a>
       </li>
-   </ul>
+      <li>
+        <a href=#other> <img src=images/other.png alt>Other</a>
+      </li>
+    </ul>
     <div class=tab-content>
       <div id=status class="tab-pane fade in active">
-        <table class=table style="font-size:20px">
+        <table class=table>
           <tbody>
             <tr>
-              <td class=border-none>MAC</td>
+              <td class=border-none>Device MAC</td>
               <td class=text-right id="txtmac"></td>
             </tr>
             <tr>
-              <td>Access point IP</td>
+              <td>Access Point IP</td>
               <td class=text-right id="txtmyip"> </td>
             </tr>
             <tr>
-              <td>Wi-Fi Network</td>
+              <td>Connected Wi-Fi</td>
               <td class=text-right id="wsid"> </td>
             </tr>
             <tr>
-              <td>WLAN WAN IP</td>
+              <td>Local IP</td>
               <td class=text-right id="localip"> </td>
+            </tr>
+            <tr>
+              <td>Wi-Fi State</td>
+              <td class=text-right><span id="wifiStatus" class="wifi-status neutral">Unknown</span></td>
             </tr>
           </tbody>
         </table>
-        <h4> <img src=images/ap.png alt>Access Point Configuration</h4>
+        <h4>Access Point Configuration</h4>
         <form>
           <div class=form-group>
-            <span class="grey-text font-weight-light" style="font-size:20px"> AP Name</span>
+            <span class="grey-text font-weight-light"> AP Name</span>
             <input type="text" id="txtssid" class="form-control" placeholder="SSID" value="">
           </div>
           <div class=form-group>
-            <span class="grey-text font-weight-light" style="font-size:20px">AP IP</span>
+            <span class="grey-text font-weight-light">AP IP</span>
             <input type="text" id="txtaplan" class="form-control" placeholder="IP Address" value="">
           </div>
           <div class=form-group>
-            <span class="grey-text font-weight-light" style="font-size:20px">AP Password &nbsp;&nbsp;</span>
+            <span class="grey-text font-weight-light">AP Password &nbsp;&nbsp;</span>
             <input type="checkbox" onclick="Gateway_passFunction()" id="apPassCheckbox">      
-            <label for="apPassCheckbox" style="font-size:16px;display:inline;"> Show Password</label>
+            <label for="apPassCheckbox" class="inline-check-label"> Show Password</label>
             <input type="password" id="txtpass" class="form-control" placeholder="Password">
           </div>
           <div class=text-center>
             <button class="btn btn-block" type="button" id="apply_btn" title=Apply>Apply</button>
+            <div class="status-msg" id="msg-ap" role="status" aria-live="polite"></div>
           </div>
-          <p style="color:red; font-size: 60%; text-align: center;">After pressing Apply, press the Reboot button located on the Other tab to activate changes.</p>
+          <p class="small-red-note" style="margin-top: 10px;">After pressing Apply, press the Reboot button on the Other tab to activate changes.</p>
         </form>
       </div>
       <div id=network class="tab-pane fade">
-        <div class=panel-group id=accordion>
-          <div class="panel panel-default">
-            <div class=panel-heading>
-              <h4 class=panel-title> <a class=active.collapsed data-toggle=collapse data-parent=#accordion href=#collapse1> Wi-Fi settings <span class=switch> <input type=checkbox id="wifi"> <span class="slider round"></span> </span> </a> </h4>
-            </div>
-            <div id=collapse1 class="panel-collapse collapse">
-              <div class=panel-body>
-                <div class=form-group>
-                  <span class="grey-text font-weight-light" style="font-size:20px">Nearby WLAN</span>
-                  <select class="mdb-select form-control" id="drpWLAN" placeholder="scan for wifi">
-                    <!-- <option value=1 placeholder="scan for wifi" ></option> -->
-                  </select>
-                </div>
-                <div class=form-group>
-                  <span class="grey-text font-weight-light" style="font-size:20px">Password &nbsp;&nbsp;</span>
-                  <input type="checkbox" onclick="Router_passFunction()" id="routerPassCheckbox">
-                  <label for="routerPassCheckbox" style="font-size:16px;display:inline;"> Show Password</label>
-                  <input type=password id="wifi_pass" class=form-control placeholder=Password>
-                </div>
-                <div class=text-center>
-                  <button class="btn btn-block" type="button" id="scan_wifi" title=scan>Scan Wi-fi</button>
-                </div>
-                <div class=form-group>
-                  <span class="grey-text font-weight-light" style="font-size:20px">Mode</span>
-                  <select class="mdb-select-repeater form-control" id="wifi_mode">
-                    <option value=1 class=inner-dhcp-box>dhcp</option>
-                    <option value=2 class=inner-static-box>static</option>
-                  </select>
-                </div>
-                <div class=box-4>
-                  <form>
-                    <div class=form-group>
-                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>IP Address</span>
-                      <input type=text id="txtipadd" class=form-control placeholder="IP Address">
-                    </div>
-                    <div class=form-group>
-                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>NetMask</span>
-                      <input type=email id="net_m" class=form-control placeholder=NetMask>
-                    </div>
-                    <div class=form-group>
-                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>Gateway Address</span>
-                      <input type=text id="g_add" class=form-control placeholder="Gateway Address">
-                    </div>
-                    <div class=form-group>
-                      <span class="grey-text font-weight-light" style="font-size:20px"><span class=require>*</span>Primary DNS Address</span>
-                      <input type=text id="p_dns" class=form-control placeholder="Primary DNS Address">
-                    </div>
-                    <div class=form-group>
-                      <span class="grey-text font-weight-light" style="font-size:20px">Secondary DNS Address</span>
-                      <input type=text id="s_dns" class=form-control placeholder="Secondary DNS Address">
-                    </div>
-                  </form>
-                </div>
-                <div class=text-center>
-                  <button class="btn btn-block" type="button" id="con_btn" title=Connect>Apply</button>
-                  <p style="color:red; font-size: 60%; text-align: center;">After pressing Apply, press the Reboot button located on the Other tab to activate changes.</p>
-                </div>
+        <div class="network-panel">
+          <h4>WiFi Settings</h4>
+          <div class=form-group>
+            <span class="grey-text font-weight-light">Nearby WLAN</span>
+            <select class="form-control" id="drpWLAN" placeholder="scan for wifi">
+              <!-- <option value=1 placeholder="scan for wifi" ></option> -->
+            </select>
+          </div>
+          <div class=form-group>
+            <span class="grey-text font-weight-light">Password &nbsp;&nbsp;</span>
+            <input type="checkbox" onclick="Router_passFunction()" id="routerPassCheckbox">
+            <label for="routerPassCheckbox" class="inline-check-label"> Show Password</label>
+            <input type=password id="wifi_pass" class=form-control placeholder=Password>
+          </div>
+          <div class=text-center>
+            <button class="btn btn-block" type="button" id="scan_wifi" title=scan>Scan Wi-fi</button>
+          </div>
+          <div class=form-group>
+            <span class="grey-text font-weight-light">Mode</span>
+            <select class="form-control" id="wifi_mode">
+              <option value=1>dhcp</option>
+              <option value=2>static</option>
+            </select>
+          </div>
+          <div class="static-network-settings" id="staticNetworkSettings">
+            <form>
+              <div class=form-group>
+                <span class="grey-text font-weight-light"><span class=require>*</span>IP Address</span>
+                <input type=text id="txtipadd" class=form-control placeholder="IP Address">
               </div>
-            </div>
+              <div class=form-group>
+                <span class="grey-text font-weight-light"><span class=require>*</span>NetMask</span>
+                <input type=text id="net_m" class=form-control placeholder=NetMask>
+              </div>
+              <div class=form-group>
+                <span class="grey-text font-weight-light"><span class=require>*</span>Gateway Address</span>
+                <input type=text id="g_add" class=form-control placeholder="Gateway Address">
+              </div>
+              <div class=form-group>
+                <span class="grey-text font-weight-light"><span class=require>*</span>Primary DNS Address</span>
+                <input type=text id="p_dns" class=form-control placeholder="Primary DNS Address">
+              </div>
+              <div class=form-group>
+                <span class="grey-text font-weight-light">Secondary DNS Address</span>
+                <input type=text id="s_dns" class=form-control placeholder="Secondary DNS Address">
+              </div>
+            </form>
+          </div>
+          <div class=text-center>
+            <button class="btn btn-block" type="button" id="con_btn" title=Connect>Apply</button>
+            <div class="status-msg" id="msg-network" role="status" aria-live="polite"></div>
+            <p class="small-red-note" style="margin-top: 10px;">WiFi changes take effect immediately; no reboot is needed.</p>
           </div>
         </div>
       </div>
@@ -138,244 +601,503 @@
         <div class=form-group>
           <div class=row>
             <div class="col-md-6">
-              <span class="grey-text font-weight-light" style="font-size:20px">Pitch Offset &nbsp;&nbsp;</span>
+              <span class="grey-text font-weight-light">Pitch Offset &nbsp;&nbsp;</span>
               <input type="checkbox" id="pitchInvert">
-              <label for="pitchInvert" style="font-size:16px;display:inline"> Reverse direction</label>
-              <input type=text id="pitchOffset" class=form-control placeholder="0" value="">
+              <label for="pitchInvert" class="inline-check-label"> Reverse direction</label>
+              <input type="number" step="0.01" id="pitchOffset" class="form-control" placeholder="0" value="">
             </div>
             <div class="col-md-6">
-              <span class="grey-text font-weight-light" style="font-size:20px">Roll Offset &nbsp;&nbsp;</span>
+              <span class="grey-text font-weight-light">Roll Offset &nbsp;&nbsp;</span>
               <input type="checkbox" id="rollInvert">
-              <label for="rollInvert" style="font-size:16px;display:inline"> Reverse direction</label>
-              <input type=text id="rollOffset" class=form-control placeholder="0" value="">
+              <label for="rollInvert" class="inline-check-label"> Reverse direction</label>
+              <input type="number" step="0.01" id="rollOffset" class="form-control" placeholder="0" value="">
             </div>
             <div class="col-md-6">
-              <span class="grey-text font-weight-light" style="font-size:20px">Filter Alpha (Smoothing)</span>
-              <p style="font-size:12px; margin-bottom:2px; color:gray;">(0.01 = heavy smoothing, 0.9 = light smoothing)</p>
-              <input type="text" id="filterAlpha" class="form-control" placeholder="0.10" value="">
+              <span class="grey-text font-weight-light">Filter Alpha (Smoothing)</span>
+              <p class="helper-text">(0.01 = heavy smoothing, 0.9 = light smoothing)</p>
+              <input type="number" step="0.01" min="0.01" max="0.99" id="filterAlpha" class="form-control" placeholder="0.10" value="">
             </div>
             <div class="col-md-6">
-              <span class="grey-text font-weight-light" style="font-size:20px">Block Size (inches)</span>
-              <p style="font-size:12px; margin-bottom:2px; color:gray;">(e.g., enter 0.5 for 1/2" blocks, or 1.5 for 1.5" blocks)</p>
-              <input type="text" id="blockSize" class="form-control" placeholder="0.5" value="">
+              <span class="grey-text font-weight-light">Block Size (inches)</span>
+              <p class="helper-text">(e.g., enter 0.5 for 1/2" blocks, or 1.5 for 1.5" blocks)</p>
+              <input type="number" step="0.25" min="0.25" id="blockSize" class="form-control" placeholder="0.5" value="">
             </div>
             <div class="col-md-6">
-              <span class="grey-text font-weight-light" style="font-size:20px">Pitch Tolerance (degrees)</span>
-              <p style="font-size:12px; margin-bottom:2px; color:gray;">(e.g., enter 0.20 for ±0.20° center window)</p>
-              <input type="text" id="pitchTolerance" class="form-control" placeholder="0.15" value="">
+              <span class="grey-text font-weight-light">Pitch Tolerance (degrees)</span>
+              <p class="helper-text">(e.g., enter 0.20 for ±0.20° center window)</p>
+              <input type="number" step="0.01" min="0" id="pitchTolerance" class="form-control" placeholder="0.15" value="">
             </div>
             <div class="col-md-6">
-              <span class="grey-text font-weight-light" style="font-size:20px">Roll Tolerance (degrees)</span>
-              <p style="font-size:12px; margin-bottom:2px; color:gray;">(e.g., enter 0.10 for tight ±0.10° center window)</p>
-              <input type="text" id="rollTolerance" class="form-control" placeholder="0.15" value="">
+              <span class="grey-text font-weight-light">Roll Tolerance (degrees)</span>
+              <p class="helper-text">(e.g., enter 0.10 for tight ±0.10° center window)</p>
+              <input type="number" step="0.01" min="0" id="rollTolerance" class="form-control" placeholder="0.15" value="">
             </div>
           </div>
-          <div class=text-center style="padding-top:10px">
+          <div class="text-center button-row">
             <button class="btn btn-block" type="button" id="cal_btn" title=Apply>Apply</button>
+            <div class="status-msg" id="msg-calibrate" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+      <div id=vehicle class="tab-pane fade">
+        <div class=form-group>
+          <div class=row>
+            <div class="col-md-6">
+              <span class="grey-text font-weight-light">Van Type</span>
+              <input type="text" id="vanType" class="form-control" maxlength="32" placeholder="Transit" value="">
+            </div>
+            <div class="col-md-6">
+              <span class="grey-text font-weight-light">Wheelbase (inches)</span>
+              <p class="helper-text">(distance between front and rear axles)</p>
+              <input type="number" step="0.1" min="100" max="200" id="wheelbase" class="form-control" placeholder="148" value="">
+            </div>
+            <div class="col-md-6">
+              <span class="grey-text font-weight-light">Track (inches)</span>
+              <p class="helper-text">(distance between left and right wheels)</p>
+              <input type="number" step="0.1" min="50" max="100" id="track" class="form-control" placeholder="68" value="">
+            </div>
+          </div>
+          <div class="text-center button-row">
+            <button class="btn btn-block" type="button" id="vehicle_btn" title=Apply>Apply</button>
+            <div class="status-msg" id="msg-vehicle" role="status" aria-live="polite"></div>
           </div>
         </div>
       </div>
       <div id=other class="tab-pane fade">
         <div class=form-group>
-          <h4><img src=images/reboot.png alt="">CONTROL</h4>
-          <div class="row">
-            <div class="col-md-6">
+          <div class="control-row">
+            <div class="control-block">
               <button class="btn btn-block" type="button" id="reboot_btn" title=Reboot>Reboot</button>
+              <div class="status-msg" id="msg-reboot" role="status" aria-live="polite"></div>
             </div>
-            <div class="col-md-6">
+            <div class="control-block">
               <button class="btn btn-block" type="button" id="reset_btn" title=Reset>Reset</button>
-              <p style="color:red; font-size: 60%; text-align: center;">Clear WiFi setup and reset AP to default</p>
+              <p class="small-red-note" style="margin-top: 8px; margin-bottom: 0;">Clear WiFi setup and reset AP to default</p>
+              <div class="status-msg" id="msg-reset" role="status" aria-live="polite"></div>
             </div>
-            <p>&nbsp;</p>            
-            <div class="col-md-12">
-              <p style="color:red; font-size: 60%; text-align: left;">Version:  <span id="txtver"></span></p>
-              <a href="./update" class="btn btn-block">Update Firmware / File System Upload</a>
-              <p style="color:red; font-size: 60%; text-align: center;">Firmware Updates:  Username = AP SSID, Password = AP Password</p>
-            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <p class="small-red-left">Version:  <span id="txtver"></span></p>
+            <a href="./update" class="btn btn-block update-link">Update Firmware / File System Upload</a>
+            <p class="small-red-note" style="margin-top: 8px;">Firmware Updates:  Username = AP SSID, Password = AP Password</p>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <script src=js/jquery-1.12.3.min.js></script>
-  <script src=js/bootstrap.min.js></script>
-  <script src=js/pixie-custom.js></script>
   <script type="text/javascript">
     var mainResponse = {};
-    $(document).ready(function() {
-      $.getJSON("/setupData").done(function(response) {
-        // mac,myip,localip on static field
-        $("#txtver").text(response.ver);
-        $("#txtmyip").text(response.myIP);
-        $("#localip").text(response.localIP);
-        $("#wsid").text(response.wsid);
-        $("#txtssid").val(response.apname);
-        $("#txtaplan").val(response.myIP);
-        $("#pitchOffset").val(response.p_offset);
-        $("#rollOffset").val(response.r_offset);
-        $("#filterAlpha").val(response.alpha);
-        $("#pitchTolerance").val(response.p_tolerance);
-        $("#rollTolerance").val(response.r_tolerance);
 
-        // Convert the backend fraction back to the physical block size
-        var fractionVal = parseFloat(response.fraction);
-        if (fractionVal > 0) {
-          // The '+' sign drops trailing zeros (e.g., 1.500 becomes 1.5)
-          $("#blockSize").val(+(1.0 / fractionVal).toFixed(3));
-        } else {
-          $("#blockSize").val("0.5"); // Fallback just in case
-        }
+    // Vanilla JS helpers
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
 
-        $("#txtmac").text(response.MAC);
-        
-        if (response.p_invert == "-1") {
-          document.getElementById("pitchInvert").checked = true;
-        } else {
-          document.getElementById("pitchInvert").checked = false;
-        }
-        if (response.r_invert == "-1") {
-          document.getElementById("rollInvert").checked = true;
-        } else {
-          document.getElementById("rollInvert").checked = false;
-        }
-        mainResponse = response;
+    const setText = (id, text) => {
+      const el = $(`#${id}`);
+      if (el) el.textContent = text;
+    };
+
+    const getValue = (id) => {
+      const el = $(`#${id}`);
+      return el ? el.value : '';
+    };
+
+    const setValue = (id, value) => {
+      const el = $(`#${id}`);
+      if (el) el.value = value;
+    };
+
+    function setActiveTab(tabId) {
+      $$('.setup-tabs li').forEach(el => el.classList.remove('active'));
+      $$('.tab-pane').forEach(el => el.classList.remove('active'));
+      const link = $(`a[href='#${tabId}']`);
+      if (link) {
+        link.parentElement.classList.add('active');
+      }
+      const pane = $(`#${tabId}`);
+      if (pane) pane.classList.add('active');
+    }
+
+    $$('.setup-tabs a').forEach(link => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        const href = link.getAttribute('href');
+        if (href) setActiveTab(href.replace('#', ''));
       });
-      clicevent();
     });
 
-    function clicevent() {
-      $(document).on("click", "#apply_btn", function() {
-        var txtaplan = $("#txtaplan").val();
-        var txtssid = $("#txtssid").val();
-        var txtpass = $("#txtpass").val();
-        
-        var apData = { txtaplan: txtaplan, txtssid: txtssid, txtpass: txtpass };
-        $.post("/applyBtnFunction", apData).done(function(response) {
-          if (response == "ok") {
-            alert("please reboot the device to apply changes");
-          }
-        });
-      });
-      $(document).on("click", "#scan_wifi", function() {
-        var scan_wifi = $("#scan_wifi").val();
-        $.get("/scanWifi?scan_wifi=" + scan_wifi).done(function(response) {
-          console.log(response)
-          if (response.length > 0) {
-            var html = "";
-            for (var item of response) {
-              html = html + " <option value=" + item.ssid + ">" + item.ssid + "</option>";
-            }
-            $("#drpWLAN").html(html);
-          }
-        });
-      });
-      $(document).on("click", "#cal_btn", function() {
-        var p_invert = "";
-        var r_invert = "";
-        var p_offset = $("#pitchOffset").val();
-        var r_offset = $("#rollOffset").val();
-        var alpha = $("#filterAlpha").val();
-        var p_tolerance = $("#pitchTolerance").val();
-        var r_tolerance = $("#rollTolerance").val();
+    function applyWifiStatusDisplay(statusText) {
+      const state = (statusText || "Unknown").toString().trim();
+      const badge = $('#wifiStatus');
+      if (!badge) return;
 
-        // Grab the block size and convert it to a fraction for the backend
-        var sizeInput = parseFloat($("#blockSize").val());
-        var fraction = 2.0; // Default to 2 (1/2" blocks) if input is invalid
-        if (sizeInput > 0) {
-          fraction = 1.0 / sizeInput;
+      badge.textContent = state || "Unknown";
+      badge.classList.remove("good", "warn", "bad", "neutral");
+
+      if (!state || state === "Unknown") {
+        badge.classList.add("neutral");
+        return;
+      }
+
+      const normalized = state.toLowerCase();
+      if (normalized.indexOf("connected") >= 0 || normalized.indexOf("online") >= 0) {
+        badge.classList.add("good");
+      } else if (normalized.indexOf("connecting") >= 0 || normalized.indexOf("retry") >= 0 || normalized.indexOf("starting") >= 0) {
+        badge.classList.add("warn");
+      } else if (normalized.indexOf("ap") >= 0 || normalized.indexOf("failed") >= 0 || normalized.indexOf("error") >= 0) {
+        badge.classList.add("bad");
+      } else {
+        badge.classList.add("neutral");
+      }
+    }
+
+    function toggleStaticNetworkFields() {
+      const modeSelect = $('#wifi_mode');
+      if (!modeSelect) return;
+      const mode = modeSelect.options[modeSelect.selectedIndex].text.trim().toLowerCase();
+      const showStatic = (mode === "static");
+      const settings = $('#staticNetworkSettings');
+      if (settings) settings.style.display = showStatic ? '' : 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch("/setupData")
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then(response => {
+          setText('txtver', response.ver);
+          
+          const warning = $('#defaultPassWarning');
+          if (warning) warning.style.display = response.default_pass ? 'block' : 'none';
+          
+          setText('txtmyip', response.myIP);
+          setText('localip', response.localIP);
+          setText('wsid', response.wsid || "Not configured");
+          applyWifiStatusDisplay(response.wifi_state || "Unknown");
+          
+          setValue('txtssid', response.apname);
+          setValue('txtaplan', response.myIP);
+          setValue('pitchOffset', response.p_offset);
+          setValue('rollOffset', response.r_offset);
+          setValue('filterAlpha', response.alpha);
+          setValue('pitchTolerance', response.p_tolerance);
+          setValue('rollTolerance', response.r_tolerance);
+          setValue('wheelbase', response.wheelbase);
+          setValue('track', response.track);
+          setValue('vanType', response.van_type);
+
+          const fractionVal = parseFloat(response.fraction);
+          if (fractionVal > 0) {
+            setValue('blockSize', +(1.0 / fractionVal).toFixed(3));
+          } else {
+            setValue('blockSize', "0.5");
+          }
+
+          setText('txtmac', response.MAC);
+          
+          const pitchInvert = document.getElementById("pitchInvert");
+          if (pitchInvert) pitchInvert.checked = response.p_invert == "-1";
+          
+          const rollInvert = document.getElementById("rollInvert");
+          if (rollInvert) rollInvert.checked = response.r_invert == "-1";
+          
+          mainResponse = response;
+        })
+        .catch(err => console.error('Failed to load setup data:', err));
+
+      const wifiMode = $('#wifi_mode');
+      if (wifiMode) wifiMode.addEventListener('change', toggleStaticNetworkFields);
+      toggleStaticNetworkFields();
+      setupClickHandlers();
+    });
+
+    function setupClickHandlers() {
+      document.addEventListener('click', (e) => {
+        if (e.target.id === 'apply_btn') {
+          const apData = {
+            txtaplan: getValue('txtaplan'),
+            txtssid: getValue('txtssid'),
+            txtpass: getValue('txtpass')
+          };
+          
+          fetch("/applyBtnFunction", {
+            method: 'POST',
+            body: new URLSearchParams(apData)
+          })
+          .then(r => {
+            if (!r.ok) throw new Error('AP settings request failed');
+            return r.text();
+          })
+          .then(response => {
+            if (response == "ok") {
+              showMessage("msg-ap", "Saved. Reboot the device from the Other tab to apply the new access point settings.", "success");
+            }
+          })
+          .catch(err => showMessage("msg-ap", "Could not save access point settings.", "error"));
         }
         
-        if (document.getElementById("pitchInvert").checked) {
-          p_invert = "-1";
-        } else {
-          p_invert = "1";
-        }
-        if (document.getElementById("rollInvert").checked) {
-          r_invert = "-1";
-        } else {
-          r_invert = "1";
+        if (e.target.id === 'scan_wifi') {
+          showMessage("msg-network", "Scanning for WiFi networks...", "info");
+          const pollScan = () => {
+            fetch("/scanWifi")
+              .then(r => {
+                if (!r.ok) throw new Error('WiFi scan request failed');
+                return r.json();
+              })
+              .then(response => {
+                if (Array.isArray(response)) {
+                  const drpWLAN = $('#drpWLAN');
+                  if (drpWLAN) {
+                    drpWLAN.innerHTML = '';
+                    response.forEach(item => {
+                      const option = document.createElement('option');
+                      option.value = item.ssid;
+                      option.textContent = item.ssid;
+                      drpWLAN.appendChild(option);
+                    });
+                  }
+                  showMessage("msg-network", response.length ? "WiFi scan complete." : "No WiFi networks found.", "info");
+                } else if (response && response.scanning) {
+                  setTimeout(pollScan, 1500);
+                } else {
+                  throw new Error('Unexpected WiFi scan response');
+                }
+              })
+              .catch(err => showMessage("msg-network", "Could not scan for WiFi networks. Please try again.", "error"));
+          };
+          pollScan();
         }
         
-        $.get("/applyOffsetFunction?p_offset=" + p_offset + "&p_invert=" + p_invert 
-                 + "&r_offset=" + r_offset + "&r_invert=" + r_invert 
-                 + "&alpha=" + alpha + "&fraction=" + fraction
-                 + "&p_tolerance=" + p_tolerance
-                 + "&r_tolerance=" + r_tolerance).done(function(response) {
-          if (response == "ok") {
-            alert("offsets applied");
+        if (e.target.id === 'cal_btn') {
+          const p_offset = getValue('pitchOffset');
+          const r_offset = getValue('rollOffset');
+          const alpha = getValue('filterAlpha');
+          const p_tolerance = getValue('pitchTolerance');
+          const r_tolerance = getValue('rollTolerance');
+          const sizeInput = Number(getValue('blockSize'));
+          const fraction = 1.0 / sizeInput;
+
+          const validations = [
+            ['pitchOffset', Number(p_offset), p_offset.trim() !== "" && isFinite(Number(p_offset)), "Pitch offset must be a valid number."],
+            ['rollOffset', Number(r_offset), r_offset.trim() !== "" && isFinite(Number(r_offset)), "Roll offset must be a valid number."],
+            ['filterAlpha', Number(alpha), isFinite(Number(alpha)) && alpha.trim() !== "" && Number(alpha) > 0 && Number(alpha) < 1, "Filter alpha must be a number greater than 0 and less than 1."],
+            ['blockSize', sizeInput, getValue('blockSize').trim() !== "" && isFinite(sizeInput) && sizeInput > 0, "Block size must be a number greater than 0."],
+            ['pitchTolerance', Number(p_tolerance), p_tolerance.trim() !== "" && isFinite(Number(p_tolerance)) && Number(p_tolerance) >= 0, "Pitch tolerance must be a number of 0 or more."],
+            ['rollTolerance', Number(r_tolerance), r_tolerance.trim() !== "" && isFinite(Number(r_tolerance)) && Number(r_tolerance) >= 0, "Roll tolerance must be a number of 0 or more."]
+          ];
+
+          for (const [fieldId, , isValid, errMsg] of validations) {
+            if (!isValid) {
+              showMessage("msg-calibrate", errMsg, "error");
+              const el = $(`#${fieldId}`);
+              if (el) el.focus();
+              return;
+            }
           }
-        });
-      });
-      $(document).on("click", "#con_btn", function() {
-        getNetwork();
-      });
-      $(document).on("click", "#reboot_btn", function() {
-        var reboot_btn = "reboot_device";
-        $.get("/rebootBtnFunction?reboot_btn=" + reboot_btn).done(function(response) {
-          if (response == "ok") {
-            alert("restarting in 5 seconds");
+
+          const pitchInvert = document.getElementById("pitchInvert");
+          const p_invert = pitchInvert && pitchInvert.checked ? "-1" : "1";
+          
+          const rollInvert = document.getElementById("rollInvert");
+          const r_invert = rollInvert && rollInvert.checked ? "-1" : "1";
+
+          const params = new URLSearchParams({
+            p_offset, p_invert, r_offset, r_invert, alpha, fraction, p_tolerance, r_tolerance
+          });
+
+          fetch(`/applyOffsetFunction?${params}`)
+            .then(r => {
+              if (!r.ok) throw new Error('Calibration request failed');
+              return r.text();
+            })
+            .then(response => {
+              if (response == "ok") {
+                showMessage("msg-calibrate", "Calibration values applied.", "success");
+              }
+            })
+            .catch(err => showMessage("msg-calibrate", "Could not apply calibration values.", "error"));
+        }
+        
+        if (e.target.id === 'vehicle_btn') {
+          const wb = Number(getValue('wheelbase'));
+          const tr = Number(getValue('track'));
+          
+          if (getValue('wheelbase').trim() === "" || !isFinite(wb) || wb < 100 || wb > 200) {
+            showMessage("msg-vehicle", "Wheelbase must be a number between 100 and 200 inches.", "error");
+            const el = $('#wheelbase');
+            if (el) el.focus();
+            return;
           }
-        });
-      });
-      $(document).on("click", "#reset_btn", function() {
-        var reset_btn = "reset_device";
-        $.get("/resetBtnFunction?reset_btn=" + reset_btn).done(function(response) {
-          if (response == "ok") {
-            alert("device is reset, please reboot to apply changes");
+          if (getValue('track').trim() === "" || !isFinite(tr) || tr < 50 || tr > 100) {
+            showMessage("msg-vehicle", "Track must be a number between 50 and 100 inches.", "error");
+            const el = $('#track');
+            if (el) el.focus();
+            return;
           }
-        });
+
+          const params = new URLSearchParams({
+            van_type: getValue('vanType'),
+            wheelbase: getValue('wheelbase'),
+            track: getValue('track')
+          });
+
+          fetch(`/applyVehicleFunction?${params}`)
+            .then(r => {
+              if (!r.ok) throw new Error('Vehicle settings request failed');
+              return r.text();
+            })
+            .then(response => {
+              if (response == "ok") {
+                ['wheelbase', 'track'].forEach(id => {
+                  const v = parseFloat(getValue(id));
+                  if (v > 0) setValue(id, v.toFixed(1));
+                });
+                showMessage("msg-vehicle", "Vehicle info applied.", "success");
+              }
+            })
+            .catch(err => showMessage("msg-vehicle", "Could not apply vehicle info.", "error"));
+        }
+        
+        if (e.target.id === 'con_btn') {
+          getNetwork();
+        }
+        
+        if (e.target.id === 'reboot_btn') {
+          fetch("/rebootBtnFunction", {
+            method: 'POST',
+            body: new URLSearchParams({ reboot_btn: "reboot_device" })
+          })
+          .then(r => {
+            if (!r.ok) throw new Error('Reboot request failed');
+            return r.text();
+          })
+          .then(response => {
+            if (response == "ok") {
+              showMessage("msg-reboot", "Restarting in 5 seconds.", "success");
+            }
+          })
+          .catch(() => showMessage("msg-reboot", "Could not restart the device. Please try again.", "error"));
+        }
+        
+        if (e.target.id === 'reset_btn') {
+          fetch("/resetBtnFunction", {
+            method: 'POST',
+            body: new URLSearchParams({ reset_btn: "reset_device" })
+          })
+          .then(r => {
+            if (!r.ok) throw new Error('Reset request failed');
+            return r.text();
+          })
+          .then(response => {
+            if (response == "ok") {
+              showMessage("msg-reset", "Settings reset. Reboot the device to apply defaults.", "success");
+            }
+          })
+          .catch(() => showMessage("msg-reset", "Could not reset settings. Please try again.", "error"));
+        }
       });
     }
 
     function getNetwork() {
-      var wifi_ssid = $("#drpWLAN :selected").text();
-      var wifi_pass = $("#wifi_pass").val();
-      var wifi_mode = $("#wifi_mode :selected").text();
-      var txtipadd = $("#txtipadd").val();
-      var net_m = $("#net_m").val();
-      var g_add = $("#g_add").val();
-      var p_dns = $("#p_dns").val();
-      var s_dns = $("#s_dns").val();
-      var urldata = "";
-      if (wifi_mode == "static") {
-        urldata = "wifi_ssid=" + wifi_ssid 
-                + "&wifi_pass=" + wifi_pass 
-                + "&wifi_mode=" + wifi_mode 
-                  + "&txtipadd=" + txtipadd 
-                  + "&net_m=" + net_m 
-                  + "&g_add=" + g_add 
-                  + "&p_dns=" + p_dns 
-                  + "&s_dns=" + s_dns;
-      } else {
-        urldata = "wifi_ssid=" + wifi_ssid + "&wifi_pass=" + wifi_pass + "&wifi_mode=" + wifi_mode;
-      }
+      const modeSelect = $('#wifi_mode');
+      const wifi_mode = modeSelect ? modeSelect.options[modeSelect.selectedIndex].text : '';
+      const wlanSelect = $('#drpWLAN');
+      const wifi_ssid = wlanSelect && wlanSelect.selectedIndex >= 0 ? wlanSelect.options[wlanSelect.selectedIndex].text : '';
+      const wifi_pass = getValue('wifi_pass');
+      const txtipadd = getValue('txtipadd');
+      const net_m = getValue('net_m');
+      const g_add = getValue('g_add');
+      const p_dns = getValue('p_dns');
+      const s_dns = getValue('s_dns');
+
       if (wifi_ssid == "" || wifi_pass == "") {
-        alert("SSID and password can't be empty");
-      } else {
-        $.post("/connectBtnFunction?", urldata).done(function(response) {
-          if (response == "ok") {
-            alert("please reboot the device to apply changes");
+        showMessage("msg-network", "SSID and password can't be empty.", "error");
+        return;
+      }
+
+      if (wifi_mode == "static") {
+        if (!txtipadd || !net_m || !g_add || !p_dns) {
+          showMessage("msg-network", "Static Wi-Fi mode requires IP, netmask, gateway, and primary DNS values.", "error");
+          return;
+        }
+      }
+
+      const postData = {
+        wifi_ssid, wifi_pass, wifi_mode,
+        ...(wifi_mode == "static" && { txtipadd, net_m, g_add, p_dns, s_dns })
+      };
+
+      fetch("/connectBtnFunction", {
+        method: 'POST',
+        body: new URLSearchParams(postData)
+      })
+      .then(r => {
+        if (!r.ok) throw new Error('WiFi settings request failed');
+        return r.text();
+      })
+      .then(response => {
+        if (response == "ok") {
+          showMessage("msg-network", "Saved. Connecting to " + wifi_ssid + "...", "info");
+          watchWifiConnect(wifi_ssid);
+        }
+      })
+      .catch(err => showMessage("msg-network", "Could not save WiFi settings.", "error"));
+    }
+
+    function watchWifiConnect(ssid) {
+      let tries = 0;
+      const timer = setInterval(() => {
+        tries++;
+        fetch("/setupData")
+          .then(r => r.json())
+          .then(r => {
+            setText('localip', r.localIP);
+            setText('wsid', r.wsid || "Not configured");
+            applyWifiStatusDisplay(r.wifi_state || "Unknown");
+            
+            if (String(r.wifi_state).indexOf("Connected") === 0) {
+              clearInterval(timer);
+              showMessage("msg-network", "Connected to " + ssid + ". IP address: " + r.localIP, "success");
+            }
+          })
+          .catch(err => console.error('Status check failed:', err));
+
+        if (tries >= 20) {
+          clearInterval(timer);
+          const msgEl = $('#msg-network');
+          if (msgEl && msgEl.classList.contains("info")) {
+            showMessage("msg-network", "Could not connect to " + ssid + ". Check the password and signal; the device keeps retrying.", "error");
           }
-        });
+        }
+      }, 2000);
+    }
+
+    const msgTimers = {};
+    function showMessage(id, text, type) {
+      const el = $(`#${id}`);
+      if (!el) return;
+      
+      clearTimeout(msgTimers[id]);
+      el.textContent = text;
+      el.classList.remove("success", "error", "info");
+      el.classList.add("show", type);
+      
+      if (type === "success") {
+        msgTimers[id] = setTimeout(() => el.classList.remove("show"), 6000);
       }
     }
 
     function Gateway_passFunction() {
-      var x = document.getElementById("txtpass");
-      if (x.type === "password") {
-        x.type = "text";
-      } else {
-        x.type = "password";
-      }
+      const x = document.getElementById("txtpass");
+      if (x) x.type = x.type === "password" ? "text" : "password";
     }
 
     function Router_passFunction() {
-      var x = document.getElementById("wifi_pass");
-      if (x.type === "password") {
-        x.type = "text";
-      } else {
-        x.type = "password";
-      }
+      const x = document.getElementById("wifi_pass");
+      if (x) x.type = x.type === "password" ? "text" : "password";
     }
 
   </script>

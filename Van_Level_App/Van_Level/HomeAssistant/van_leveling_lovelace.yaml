@@ -8,6 +8,9 @@
 #           packages: !include_dir_named packages
 #    * The following sensors exist (created in van_leveling.yaml):
 #         sensor.van_level_text
+#         sensor.van_level_van_type
+#         sensor.van_level_wheelbase
+#         sensor.van_level_track
 #         sensor.van_level_left_front_lift
 #         sensor.van_level_right_front_lift
 #         sensor.van_level_right_rear_lift
@@ -89,8 +92,7 @@
               state: 'off'
           elements:
             - type: state-label
-              entity: sensor.van_level_text
-              prefix: Transit T-350 EXT HR
+              entity: sensor.van_level_van_type
               style:
                 left: 50%
                 top: 38%
@@ -99,8 +101,8 @@
                 font-weight: bold
                 font-size: 1.2em
             - type: state-label
-              entity: sensor.van_level_text
-              prefix: 148in WB
+              entity: sensor.van_level_wheelbase
+              suffix: ' WB'
               style:
                 left: 50%
                 top: 44%
@@ -109,8 +111,8 @@
                 font-weight: bold
                 font-size: 1.2em
             - type: state-label
-              entity: sensor.van_level_text
-              prefix: 68in Track
+              entity: sensor.van_level_track
+              suffix: ' Track'
               style:
                 left: 50%
                 top: 50%
@@ -156,8 +158,7 @@
               state: 'on'
           elements:
             - type: state-label
-              entity: sensor.van_level_text
-              prefix: Transit T-350 EXT HR
+              entity: sensor.van_level_van_type
               style:
                 left: 50%
                 top: 38%
@@ -169,8 +170,8 @@
                 font-weight: bold
                 font-size: 1.2em
             - type: state-label
-              entity: sensor.van_level_text
-              prefix: 148in WB
+              entity: sensor.van_level_wheelbase
+              suffix: ' WB'
               style:
                 left: 50%
                 top: 44%
@@ -182,8 +183,8 @@
                 font-weight: bold
                 font-size: 1.2em
             - type: state-label
-              entity: sensor.van_level_text
-              prefix: 68in Track
+              entity: sensor.van_level_track
+              suffix: ' Track'
               style:
                 left: 50%
                 top: 50%

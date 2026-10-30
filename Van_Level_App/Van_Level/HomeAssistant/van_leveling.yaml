@@ -17,6 +17,13 @@ rest:
           - ver
           - fraction
           - lvl
+          - lf
+          - rf
+          - lr
+          - rr
+          - vanType
+          - wheelbase
+          - track
 
 template:
   - binary_sensor:
@@ -35,6 +42,20 @@ template:
         unique_id: van_level_version
         state: "{{ state_attr('sensor.van_level_data', 'ver') | default('Unknown') }}"
 
+      - name: "Van Level Van Type"
+        unique_id: van_level_van_type
+        state: "{{ state_attr('sensor.van_level_data', 'vanType') | default('Unknown') }}"
+
+      - name: "Van Level Wheelbase"
+        unique_id: van_level_wheelbase
+        unit_of_measurement: '"'
+        state: "{{ state_attr('sensor.van_level_data', 'wheelbase') | float(0) }}"
+
+      - name: "Van Level Track"
+        unique_id: van_level_track
+        unit_of_measurement: '"'
+        state: "{{ state_attr('sensor.van_level_data', 'track') | float(0) }}"
+
       - name: "Van Level Pitch"
         unique_id: van_level_pitch
         unit_of_measurement: "°"
@@ -45,74 +66,23 @@ template:
         unit_of_measurement: "°"
         state: "{{ state_attr('sensor.van_level_data', 'roll') | float(0) | round(1) }}"
 
-      - name: "Van Level Pitch Height"
-        unique_id: van_level_pitch_height
-        unit_of_measurement: '"'
-        state: >
-          {{ ((states('sensor.van_level_pitch') | float(0) | abs) * (3.14159265 / 180)) | tan * 148 | round(2) }}
-
-      - name: "Van Level Roll Height"
-        unique_id: van_level_roll_height
-        unit_of_measurement: '"'
-        state: >
-          {{ ((states('sensor.van_level_roll') | float(0) | abs) * (3.14159265 / 180)) | tan * 68 | round(2) }}
-
+      # Heights are calculated by the ESP32; a wheel reading 0.0 is hidden by the Lovelace card
       - name: "Van Level Left Front Lift"
         unique_id: van_level_left_front_lift
         unit_of_measurement: '"'
-        state: >
-          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
-          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
-          {% set roll = states('sensor.van_level_roll') | float(0) %}
-          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
-          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %} 0
-          {% elif pitch < 0 and roll >= 0 %} {{ ((roll_height * fraction) | round(0)) / fraction }}
-          {% elif pitch >= 0 and roll < 0 %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
-          {% else %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
-          {% endif %}
+        state: "{{ state_attr('sensor.van_level_data', 'lf') | float(0) }}"
 
       - name: "Van Level Right Front Lift"
         unique_id: van_level_right_front_lift
         unit_of_measurement: '"'
-        state: >
-          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
-          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
-          {% set roll = states('sensor.van_level_roll') | float(0) %}
-          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
-          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %} {{ ((roll_height * fraction) | round(0)) / fraction }}
-          {% elif pitch < 0 and roll >= 0 %} 0
-          {% elif pitch >= 0 and roll < 0 %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
-          {% else %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
-          {% endif %}
+        state: "{{ state_attr('sensor.van_level_data', 'rf') | float(0) }}"
 
       - name: "Van Level Right Rear Lift"
         unique_id: van_level_right_rear_lift
         unit_of_measurement: '"'
-        state: >
-          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
-          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
-          {% set roll = states('sensor.van_level_roll') | float(0) %}
-          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
-          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
-          {% elif pitch < 0 and roll >= 0 %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
-          {% elif pitch >= 0 and roll < 0 %} {{ ((roll_height * fraction) | round(0)) / fraction }}
-          {% else %} 0
-          {% endif %}
+        state: "{{ state_attr('sensor.van_level_data', 'rr') | float(0) }}"
 
       - name: "Van Level Left Rear Lift"
         unique_id: van_level_left_rear_lift
         unit_of_measurement: '"'
-        state: >
-          {% set fraction = state_attr('sensor.van_level_data', 'fraction') | float(2) %}
-          {% set pitch = states('sensor.van_level_pitch') | float(0) %}
-          {% set roll = states('sensor.van_level_roll') | float(0) %}
-          {% set pitch_height = ((pitch | abs) * (3.14159265 / 180)) | tan * 148 %}
-          {% set roll_height = ((roll | abs) * (3.14159265 / 180)) | tan * 68 %}
-          {% if pitch < 0 and roll < 0 %} {{ ((pitch_height * fraction) | round(0)) / fraction }}
-          {% elif pitch < 0 and roll >= 0 %} {{ (((roll_height + pitch_height) * fraction) | round(0)) / fraction }}
-          {% elif pitch >= 0 and roll < 0 %} 0
-          {% else %} {{ ((roll_height * fraction) | round(0)) / fraction }}
-          {% endif %}
+        state: "{{ state_attr('sensor.van_level_data', 'lr') | float(0) }}"

@@ -2,208 +2,288 @@
 <html>
 
 <head>
- <meta charset=utf-8>
+  <meta charset=utf-8>
   <meta http-equiv=X-UA-Compatible content=IE=edge>
   <title>Van Level</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="images/favicon.png">
   <style>
-    @media screen and (orientation: landscape) {
-      .container {
-        object-fit: contain;
-        position: absolute;
-        text-align: center;
-        font-weight: bold;
-        font-size: 3vw;
-      }
-      .van-image {
-        width: 100%;
-      }
-      #left-front {
-        position: absolute;
-        bottom: 15%;
-        left: 16%;
-        transform: translate(-50%, 50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #right-front {
-        position: absolute;
-        top: 14%;
-        left: 16%;
-        transform: translate(-50%, -50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #right-rear {
-        position: absolute;
-        top: 14%;
-        right: 30%;
-        transform: translate(50%, -50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #left-rear {
-        position: absolute;
-        bottom: 15%;
-        right: 30%;
-        transform: translate(50%, 50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #info {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: left;
+    :root {
+      color-scheme: light dark;
+      --bg: #ffffff;
+      --bg-level: #2ecc71;
+      --fg: #111111;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --bg-level: #1e7a46;
+        --fg: #f2f2f2;
       }
     }
-    
-    @media screen and (orientation: portrait) {
-      .container {
-        object-fit: contain;
-        position: absolute;
-        text-align: center;
-        font-weight: bold;
-        font-size: 3.3vw;
+
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: bold;
+    }
+
+    body.level {
+      background: var(--bg-level);
+    }
+
+    /* no data for a few seconds: grey the numbers and drop the level colour */
+    body.stale {
+      background: var(--bg);
+    }
+
+    body.stale .wheel rect {
+      stroke: #777777;
+    }
+
+    body.stale .wheel text {
+      fill: #777777;
+    }
+
+    #van {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    .wheel rect {
+      fill: none;
+      stroke: var(--fg);
+      stroke-width: 3;
+    }
+
+    .wheel text {
+      fill: var(--fg);
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    #info {
+      fill: #111111;
+      text-anchor: middle;
+    }
+
+    #info[data-freshness="aging"],
+    #info[data-freshness="stale"] {
+      animation: freshness-pulse var(--freshness-duration, 1s) ease-in-out infinite;
+    }
+
+    @keyframes freshness-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #info[data-freshness="aging"],
+      #info[data-freshness="stale"] {
+        animation: none;
+        text-decoration: underline;
       }
-      .van-image {
-        width: 100%;
-        /* center of rotation is  (((length+width)/4) / width) and (((length+width)/4) / length) */
-        transform-origin: 39.22% 68.96%;
-        transform: rotate(90deg);
-      }
-      #left-front {
-        position: absolute;
-        top: 20%;
-        left: 28%;
-        transform: translate(-50%, 50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #right-front {
-        position: absolute;
-        top: 20%;
-        right: 28%;
-        transform: translate(50%, 50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #right-rear {
-        position: absolute;
-        bottom: -30%;
-        right: 28%;
-        transform: translate(50%, -50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #left-rear {
-        position: absolute;
-        bottom: -30%;
-        left: 28%;
-        transform: translate(-50%, -50%);
-        border: 1px solid;
-        padding: .3vw;
-      }
-      #info {
-        position: absolute;
-        top: 90%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        text-align: left;
+
+      #info[data-freshness="stale"] {
+        text-decoration-style: double;
       }
     }
   </style>
 </head>
 
 <body>
-  <div class="container"> <img src="images/transit_top_transparent.png" alt="Image of van roof" class="van-image">
-    <div id="left-front">1</div>
-    <div id="right-front">2</div>
-    <div id="right-rear">3</div>
-    <div id="left-rear">4</div>
-    <div id="info">Van Info</div>
-  </div>
+  <svg id="van" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1869 1063" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Van level">
+    <g id="van-image">
+      <image href="images/transit_top_transparent.png" width="1869" height="1063"></image>
+    </g>
+    <g id="left-front" class="wheel" visibility="hidden"><rect rx="6"></rect><text>1</text></g>
+    <g id="right-front" class="wheel" visibility="hidden"><rect rx="6"></rect><text>2</text></g>
+    <g id="right-rear" class="wheel" visibility="hidden"><rect rx="6"></rect><text>3</text></g>
+    <g id="left-rear" class="wheel" visibility="hidden"><rect rx="6"></rect><text>4</text></g>
+    <text id="info"></text>
+  </svg>
   <script>
-    const VAN_TYPE = 'Transit';
-    const WHEELBASE = 148;
-    const TRACK = 68;
-    // Round value to nearest fraction
-    function roundF(value, fraction) {
-      var temp = value * fraction;
-      temp = Math.round(temp);
-      return temp / fraction;
-    }
-    // Function to display van information and wheel lift values
-    function displayReadings(pPitch, pRoll, pVer, pFraction, pLvl) {
-      document.getElementById("info").innerHTML = VAN_TYPE + "<span style=\"font-size: 1vw\"> v" + pVer + "</span><br>"
-                                                  + WHEELBASE + "&quot; WB<br>" + TRACK
-                                                  + "&quot; Track<br>Pitch: " + pPitch + "&deg;<br>Roll: "
-                                                  + pRoll + "&deg;";
-      var pitch_height = Math.tan((Math.abs(pPitch) * Math.PI) / 180) * WHEELBASE;
-      var roll_height = Math.tan((Math.abs(pRoll) * Math.PI) / 180) * TRACK;
-      // Display the lift amounts relative to the low wheel and hide the low wheel display
-      if (pPitch < 0 && pRoll < 0) {
-        document.getElementById("left-front").style.visibility = "hidden";
-        document.getElementById("right-front").style.visibility = "visible";
-        document.getElementById("right-rear").style.visibility = "visible";
-        document.getElementById("left-rear").style.visibility = "visible";
-        document.getElementById("right-front").innerHTML = roundF(roll_height, pFraction) + "&quot;";
-        document.getElementById("right-rear").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
-        document.getElementById("left-rear").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
-      } else if (pPitch < 0 && pRoll >= 0) {
-        document.getElementById("left-front").style.visibility = "visible";
-        document.getElementById("right-front").style.visibility = "hidden";
-        document.getElementById("right-rear").style.visibility = "visible";
-        document.getElementById("left-rear").style.visibility = "visible";
-        document.getElementById("left-front").innerHTML = roundF(roll_height, pFraction) + "&quot;";
-        document.getElementById("right-rear").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
-        document.getElementById("left-rear").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
-      } else if (pPitch >= 0 && pRoll < 0) {
-        document.getElementById("left-front").style.visibility = "visible";
-        document.getElementById("right-front").style.visibility = "visible";
-        document.getElementById("right-rear").style.visibility = "visible";
-        document.getElementById("left-rear").style.visibility = "hidden";
-        document.getElementById("left-front").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
-        document.getElementById("right-front").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
-        document.getElementById("right-rear").innerHTML = roundF(roll_height, pFraction) + "&quot;";
-      } else if (pPitch >= 0 && pRoll >= 0) {
-        document.getElementById("left-front").style.visibility = "visible";
-        document.getElementById("right-front").style.visibility = "visible";
-        document.getElementById("right-rear").style.visibility = "hidden";
-        document.getElementById("left-rear").style.visibility = "visible";
-        document.getElementById("left-front").innerHTML = roundF((roll_height + pitch_height), pFraction) + "&quot;";
-        document.getElementById("right-front").innerHTML = roundF(pitch_height, pFraction) + "&quot;";
-        document.getElementById("left-rear").innerHTML = roundF(roll_height, pFraction) + "&quot;";
+    var SVG_NS = "http://www.w3.org/2000/svg";
+    var wheelIds = { lf: "left-front", rf: "right-front", lr: "left-rear", rr: "right-rear" };
+
+    // Positions are in SVG user units. Portrait rotates the van image 90 degrees clockwise;
+    // wheel and info positions are the landscape ones rotated the same way: (x, y) -> (1063 - y, x).
+    var layouts = {
+      landscape: {
+        viewBox: "0 0 1869 1063",
+        image: "",
+        labelFont: 64,
+        infoFont: 56,
+        wheels: { lf: [299, 904], rf: [299, 149], lr: [1308, 904], rr: [1308, 149] },
+        info: [934.5, 531.5]
+      },
+      portrait: {
+        viewBox: "0 0 1063 1869",
+        image: "translate(1063 0) rotate(90)",
+        labelFont: 72,
+        infoFont: 60,
+        wheels: { lf: [159, 299], rf: [914, 299], lr: [159, 1308], rr: [914, 1308] },
+        info: [531.5, 934.5]
       }
-      
-      if (pLvl) {
-        document.body.style.backgroundColor = "#2ecc71"; // Level Green
+    };
+
+    var svg = document.getElementById("van");
+    var infoEl = document.getElementById("info");
+    var lastData = null;
+    var lastUpdate = null; // time of the last reading from the device
+    var STALE_MS = 3000;
+    var currentOrientation = null;
+
+    function isPortrait() {
+      return window.matchMedia("(orientation: portrait)").matches;
+    }
+
+    function applyLayout() {
+      var name = isPortrait() ? "portrait" : "landscape";
+      currentOrientation = name;
+      var L = layouts[name];
+      svg.setAttribute("viewBox", L.viewBox);
+      var img = document.getElementById("van-image");
+      if (L.image) {
+        img.setAttribute("transform", L.image);
       } else {
-        document.body.style.backgroundColor = "#ffffff"; // Default White
+        img.removeAttribute("transform");
       }
+      for (var k in wheelIds) {
+        var g = document.getElementById(wheelIds[k]);
+        g.setAttribute("transform", "translate(" + L.wheels[k][0] + " " + L.wheels[k][1] + ")");
+        g.querySelector("text").setAttribute("font-size", L.labelFont);
+      }
+      infoEl.setAttribute("font-size", L.infoFont);
+      if (lastData) renderReadings(lastData);
     }
+
+    // Size the border box around a wheel label to fit its text
+    function sizeWheelBox(g) {
+      var b = g.querySelector("text").getBBox();
+      var pad = 14;
+      var r = g.querySelector("rect");
+      r.setAttribute("x", b.x - pad);
+      r.setAttribute("y", b.y - pad / 2);
+      r.setAttribute("width", b.width + 2 * pad);
+      r.setAttribute("height", b.height + pad);
+    }
+
+    // Rebuild the multi-line info block and centre it on the van
+    function setInfo(d) {
+      while (infoEl.firstChild) infoEl.removeChild(infoEl.firstChild);
+      var lines = [
+        [String(d.vanType)],
+        [parseFloat(d.wheelbase).toFixed(1) + "\" WB"],
+        [parseFloat(d.track).toFixed(1) + "\" Track"],
+        ["Pitch: " + d.pitch + "\u00B0"],
+        ["Roll: " + d.roll + "\u00B0"],
+        ["v" + d.ver, true]
+      ];
+      lines.forEach(function(parts, i) {
+        var line = document.createElementNS(SVG_NS, "tspan");
+        line.setAttribute("x", 0);
+        line.setAttribute("dy", i === 0 ? 0 : "1.2em");
+        if (parts[1]) line.setAttribute("font-size", "0.6em");
+        line.appendChild(document.createTextNode(parts[0]));
+        infoEl.appendChild(line);
+      });
+      infoEl.removeAttribute("transform");
+      var b = infoEl.getBBox();
+      var c = layouts[currentOrientation].info;
+      infoEl.setAttribute("transform", "translate(" + (c[0] - b.x - b.width / 2) + " " + (c[1] - b.y - b.height / 2) + ")");
+    }
+
+    // Display van information and the wheel lift values calculated by the ESP32
+    function renderReadings(d) {
+      lastData = d;
+      setInfo(d);
+      for (var k in wheelIds) {
+        var g = document.getElementById(wheelIds[k]);
+        var h = parseFloat(d[k]);
+        g.setAttribute("visibility", (d.low === k || !(h > 0)) ? "hidden" : "visible");
+        g.querySelector("text").textContent = h + "\"";
+        sizeWheelBox(g);
+      }
+      document.body.classList.toggle("level", !!d.lvl);
+    }
+
+    // A new reading arrived from the device
+    function displayReadings(d) {
+      lastUpdate = Date.now();
+      renderReadings(d);
+      updateFreshness();
+    }
+
+    function updateFreshness() {
+      if (lastUpdate === null) return;
+      var elapsed = Date.now() - lastUpdate;
+      infoEl.setAttribute("data-freshness", elapsed >= 8000 ? "stale" : elapsed >= 2000 ? "aging" : "current");
+      var pulseDuration = elapsed >= 8000 ? 0.5 : 1;
+      infoEl.style.setProperty("--freshness-duration", pulseDuration + "s");
+      document.body.classList.toggle("stale", elapsed > STALE_MS);
+    }
+    setInterval(updateFreshness, 500);
+
     // Function to get current readings on the webpage when it loads for the first time
+    var readingsRequestInFlight = false;
     function getReadings() {
+      if (readingsRequestInFlight) return;
+      readingsRequestInFlight = true;
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-          var myObj = JSON.parse(this.responseText);
-          console.log(myObj);
-          displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction), myObj.lvl);
+        if (this.readyState == 4) {
+          readingsRequestInFlight = false;
+          if (this.status == 200) {
+            try {
+              displayReadings(JSON.parse(this.responseText));
+            } catch (e) {
+              console.log("Invalid readings response", e);
+            }
+          }
         }
       };
+      xhr.onerror = xhr.ontimeout = function() {
+        readingsRequestInFlight = false;
+      };
+      xhr.timeout = 3000;
       xhr.open("GET", "/readings", true);
       xhr.send();
     }
-    // Get current sensor readings when the page loads  
+
+    applyLayout();
+
+    // Keep the screen on while the page is visible; needs a secure context (HTTPS) and is skipped where unsupported
+    function requestWakeLock() {
+      if (!("wakeLock" in navigator)) return;
+      navigator.wakeLock.request("screen").catch(function(e) {
+        console.log("Wake lock unavailable", e);
+      });
+    }
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === "visible") requestWakeLock();
+    });
+    requestWakeLock();
+    window.addEventListener("resize", function() {
+      if ((isPortrait() ? "portrait" : "landscape") !== currentOrientation) applyLayout();
+    });
+    // Get current sensor readings when the page loads
     window.addEventListener('load', getReadings);
     // Add a listener for periodic updates from the ESP32
+    var source = null;
     if (!!window.EventSource) {
-      var source = new EventSource('/events');
+      source = new EventSource('/events');
       source.addEventListener('open', function(e) {
         console.log("Events Connected");
+        getReadings();
       }, false);
       source.addEventListener('error', function(e) {
         if (e.target.readyState != EventSource.OPEN) {
@@ -217,9 +297,12 @@
         console.log("new_readings", e.data);
         var myObj = JSON.parse(e.data);
         console.log(myObj);
-        displayReadings(parseFloat(myObj.pitch), parseFloat(myObj.roll), myObj.ver, parseFloat(myObj.fraction), myObj.lvl);
+        displayReadings(myObj);
       }, false);
     }
+    setInterval(function() {
+      if (!source || source.readyState !== EventSource.OPEN) getReadings();
+    }, 2000);
   </script>
 </body>
 

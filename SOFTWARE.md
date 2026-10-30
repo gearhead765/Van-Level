@@ -2,14 +2,12 @@
 
 ## Introduction
 
+This is an ESP32 application to read sensor data from a MEMS accelerometer and convert this into wheel block heights to level a camper van.  Block heights are displayed on a webpage (index.html) showing an image of the van roof with the block height needed at each wheel.
 
-This is an ESP32 application to read sensor data from a MEMS accelerometer and convert this into wheel block heights to level a camper van.  Block heights are displayed on a webpage using an image of the van roof showing the block height needed at each wheel.
 
-Pitch and roll angles are calculated in this application running on the ESP32.  Block heights are calculated in the HTML file based on the wheelbase and track of of the van defined in the HTML file.
+HomeAssistant integration is via and embedded webpage (iframe) or a RESTful sensor and Picture Card. See HomeAssistant directory for an example YAML package and Lovelace card code.
 
-HomeAssistant integration is via RESTful sensor. See HomeAssistant directory for an example YAML package and Lovelace card code.
-
-The `/setup` page allows configuration of the Access Point (default values are located in [data/APconfig.json](Van_Level_App/Van_Level/data/APconfig.json), Wifi network setup, sensor calibration, and firmware updates.
+The `/setup` page allows configuration of the Access Point (default values are located in [data/APconfig.json](Van_Level_App/Van_Level/data/APconfig.json), Wifi network setup, sensor calibration, van information, and firmware updates.
 
 ## Setting up the Arduino Environment
 Included in the [Notes](Notes/) folder are numerous links to Arduino tutorials on the Web.  Among them are links to Rui & Sara Santos' [Random Nerd Tutorials](https://randomnerdtutorials.com/).  This application was based on their [ESP32 Web Server](https://randomnerdtutorials.com/esp32-web-server-gauges/) app.  Their pages will give you the necessary background on installing the Arduino IDE, Boards, and Libraries.  If you are not already familiar with these items, I highly recommend giving their tutorials some attention.
@@ -66,8 +64,4 @@ Portions of this app are based on Random Nerd Tutorials
   Permission is hereby granted, free of charge, to any person obtaining a copy of this
   software and associated documentation files. The above copyright notice and this
   permission notice shall be included in all copies or substantial portions of the Software.
-
-Portions of this app are based on Configuration-webpage-esp32 
-  https://github.com/futechiot/Configuration-webpage-esp32
-  GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 ```
