@@ -17,9 +17,7 @@ This app displays a simple webpage with a graphic of a camper van showing the am
 ├── Notes/                           # Datasheets and component references
 ├── Van_Level_App/Van_Level          # Arduino ESP32 source code
 │                 ├── data/          # App's LittleFS website
-│                 │   ├── css/ 
-│                 │   ├── images/
-│                 │   └── js/
+│                 │   └── images/
 │                 └── HomeAssistant/ # RESTful Lovelace card for Home Assistant
 ├── Van_Level_PCB/                   # Kicad board files
 │   └── Component Models/            # STEP files of board components
@@ -47,7 +45,7 @@ The van image can be changed to reflect your particular vehicle model and color,
 ## Getting Started
 
 ### 1. Hardware Setup
-1. Connect the ESP32 board to 12V DC power via connector C1 observing correct polarity
+1. Connect the ESP32 board to 12V DC power via connector C1 observing correct polarity.
 1. Connect to the built-in Access Point by opening your phone or computer Wifi Settings and selecting the `VAN_LEVEL` access point.
 1. The default password for the access point is `12345678`.
 1. The default name `VAN_LEVEL` and password `12345678` can be changed later.
@@ -55,7 +53,13 @@ The van image can be changed to reflect your particular vehicle model and color,
 1. Your browser window should look something like this:
 <br>![](Images/main_portrait.png)
 
-### 2. AP Configuration
+### 2. The Main Display
+1. The image above is the standard display in portrait mode.  It will auto rotate for landscape and both views support your browser's `Dark Mode` setting.
+1. Next to each wheel location is the number of inches of blocking necessary to level your camper.  If no blocking is needed for a particular wheel, the height for that wheel will be hidden.  The granularity for these values is user selectable (i.e. to match your block height).
+1. Centered on the van image, is the status information for your vehicle, including the current pitch and roll values.  If communication with the app is impaired, the status information will flash to indicate aging wheel lift data.  If communication is impaired for a significant amount of time, the status text will flash faster and the wheel lift data will become grayed out.
+1. If the pitch and roll values are within user defined tolerances, the background will change to green signifying the van is level.  There is an example of this at the begining of this document.
+
+### 3. AP Configuration
 1. To connect the *Van Level* app to your local network, or to change the default access point address, name, and/or password, we need to connect to the configuration page.  Navigate your browser to `192.168.4.1/setup`.
 1. You will be asked for a login name and password.  These are the same as the AP name and password initially, and can be easily changed later.
 <br>![](Images/setup_login.png)
@@ -67,14 +71,14 @@ The van image can be changed to reflect your particular vehicle model and color,
 1. There will be an alert at the top of the page if you are using the default name and/or password.  For security reasons, it is best to change these to something uniquely yours.
 1. If you forget your AP name or password, you will no longer be able to log into the `setup` page to make changes.  If this happens, you can reset the App to the original defaults by holding down the 'Boot' button on the ESP32 board for 5 seconds while the device reboots.
 
-### 3. Network Configuration
+### 4. Network Configuration
 1. The `Network` tab allows you to connect the *Van Level* app to your local network.  Pressing the `Scan Wi-Fi` button will search for all available access points.  When the scanning is finished, selecting the `Nearby WLAN` dropdown will present a list of all APs found allowing you to select one.
 <br>![](Images/settings_network.png)
 1. Enter the WiFi password for this network.
 1. You can now select DHCP or Static network configuration.  After you have made your selections and filled in the network password, click `Apply`.  Changes are automatic and you do not need to restart the device.
 1. You can switch back to the `Status` tab and verify your selected WiFi connection.
 
-### 4. Calibration
+### 5. Calibration
 ![](Images/settings_calibration.png)
 1. If the pitch or roll values of your van are not `0` when the van is level, you can enter the opposite amount here to tare the display.  For example, if your van shows +1.0° pitch when level, enter -1.0 in the pitch offset box.
 1. Depending on how you mount the Van Level hardware, your pitch and roll values might move in the opposite direction.  Positive pitch should be nose up, and positive roll should be clockwise looking forward (i.e. drivers side higher than the passenger side).  Select `Reverse Direction` if either of your values are opposite of this standard.
@@ -94,7 +98,7 @@ The van image can be changed to reflect your particular vehicle model and color,
 1. Click the `Apply` button to immediately apply these changes.
 
 
-### 5. Other
+### 6. Other
 ![](Images/settings_other.png)
 1.  `Reboot` will restart the Van Level device retaining all of your current settings.
 1.  `Reset` will clear your stored Wifi network information and restore the default AP captive portal name and password.  **Make sure** this is what you want before pressing `Reset`.  If you have forgotten your AP name and password and can no longer access the configuration page because of this, it is possible to reset the hardware physically.  This process is discussed in [Software](SOFTWARE.md).

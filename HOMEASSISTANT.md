@@ -2,9 +2,9 @@
 ## Easy Method First
 There are two methods for integrating with HomeAssistant.  The easiest is just to embed
 the webpage in a HomeAssistant panel using a Webpage Card (i.e., an iframe).  This
-provides you with dark mode support background coloring to show level, and automatic
+provides you with dark mode support, background coloring to show level, and automatic
 landscape/portrait orientation support.  The limitations for this method are that you can’t
-embed sites using HTTP if you are using HTTPS for your Home Assistant, nor can you use
+embed sites using HTTP, like this app, if you are using HTTPS for your Home Assistant, nor can you use
 the leveling information in HA automations.
 
 ```
