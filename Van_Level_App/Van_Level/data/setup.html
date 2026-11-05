@@ -516,6 +516,10 @@
               <td>Wi-Fi State</td>
               <td class=text-right><span id="wifiStatus" class="wifi-status neutral">Unknown</span></td>
             </tr>
+            <tr>
+              <td>Wi-Fi Channel</td>
+              <td class=text-right id="wifiChannel">Unknown</td>
+            </tr>
           </tbody>
         </table>
         <h4>Access Point Configuration</h4>
@@ -777,6 +781,7 @@
           setText('localip', response.localIP);
           setText('wsid', response.wsid || "Not configured");
           applyWifiStatusDisplay(response.wifi_state || "Unknown");
+          setText('wifiChannel', response.wifi_channel || "Unknown");
           
           setValue('txtssid', response.apname);
           setValue('txtaplan', response.myIP);
@@ -1057,6 +1062,7 @@
             setText('localip', r.localIP);
             setText('wsid', r.wsid || "Not configured");
             applyWifiStatusDisplay(r.wifi_state || "Unknown");
+            setText('wifiChannel', r.wifi_channel || "Unknown");
             
             if (String(r.wifi_state).indexOf("Connected") === 0) {
               clearInterval(timer);

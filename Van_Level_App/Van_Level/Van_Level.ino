@@ -5,6 +5,18 @@
     wheel block heights to level a camper van.  Block heights are displayed on a webpage
     (index.html) showing an image of the van roof with the block height needed at each wheel.
 
+    This App also uses ESP-NOW to communicate with other ESP32 devices that can detect
+    obstacles and display the information on the van level webpage.  There are three regions
+    for obstical detection.  Forward and Rearward detection zones use LiDAR sensors to
+    determine if there is an obsticle that will strike the roof mounted airconditioner.
+    An addtional detection zone is used for underneath the van; an ultrasonic sensor is
+    used determine the clearance underneath the grey water tank drain valve.
+
+    Obstical detection zones use color coding to indicate the presence of obstacles.
+    Green indicates no obsticles within range.  Red indicates the presence of an obstacle,
+    and yellow indicates a problem with the sensor or radio communication.  Zones will also
+    display a range value to the obstacle detected.
+
     The /setup page allows configuration of the Access Point, Wifi network setup, sensor
     calibration, camper information and firmware updates.  Default AP credentials are located
     in the LittleFS data folder at /data/APconfig.json.  You can change these if you want, but
@@ -55,10 +67,12 @@
 	    permission notice shall be included in all copies or substantial portions of the Software.
 
 *******************************************************************************************/
-const char* VERSION = "1.0.4";
+const char* VERSION = "2.0.0a";
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <esp_now.h>
+#include <cstring>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <Arduino_JSON.h>
@@ -123,7 +137,7 @@ String vanType = "Transit";
 unsigned long bootStart = 0;  // if non-zero, will restart when bootStart + bootDelay = now
 const unsigned long bootDelay = 5000;
 unsigned long lastWebTime = 0;      // IMU data webpage push
-const unsigned long webDelay = 500; // publish readings every half-second
+const unsigned long webDelay = 200;
 unsigned long lastSensorReadTime = 0;
 unsigned long sensorReadDelay = 40000; // microseconds - 25Hz default
 const unsigned long staRetryInterval = 10000; // retry saved STA credentials this often while disconnected
@@ -154,6 +168,81 @@ JSONVar imuData; // only touched by loop(); web handlers read latestReadings ins
 String latestReadings = "{}"; // most recent JSON published by loop()
 SemaphoreHandle_t readingsMutex;
 bool hasIMU = false;
+
+// ESP-NOW message handling for distance sensors
+enum DistanceUnits : uint8_t {
+  UNITS_CM = 0,
+  UNITS_INCH = 1,
+  UNITS_M = 2,
+  UNITS_FT = 3
+};
+
+typedef struct {
+  uint8_t id;
+  uint8_t units;
+  int16_t distance;
+} EspNowMessage;
+
+struct EspNowReading {
+  int16_t distance;
+  uint8_t units;
+  unsigned long receivedAt;
+  bool received;
+};
+
+EspNowReading espNowReadings[256] = {};
+portMUX_TYPE espNowMutex = portMUX_INITIALIZER_UNLOCKED;
+const unsigned long espNowStaleDelay = 2000;
+
+void onEspNowReceive(const esp_now_recv_info_t *info, const uint8_t *data, int length) {
+  if (data == nullptr || length != sizeof(EspNowMessage)) return;
+
+  EspNowMessage message;
+  memcpy(&message, data, sizeof(message));
+  unsigned long receivedAt = millis();
+  portENTER_CRITICAL(&espNowMutex);
+  espNowReadings[message.id].distance = message.distance;
+  espNowReadings[message.id].units = message.units;
+  espNowReadings[message.id].receivedAt = receivedAt;
+  espNowReadings[message.id].received = true;
+  portEXIT_CRITICAL(&espNowMutex);
+}
+
+void initEspNow() {
+  esp_err_t result = esp_now_init();
+  if (result != ESP_OK) {
+    Serial.printf("ESP-NOW initialization failed: %d\n", result);
+    return;
+  }
+  result = esp_now_register_recv_cb(onEspNowReceive);
+  if (result != ESP_OK) {
+    Serial.printf("ESP-NOW receive callback registration failed: %d\n", result);
+    esp_now_deinit();
+    return;
+  }
+  Serial.printf("ESP-NOW listening on STA MAC %s, WiFi channel %d\n",
+                WiFi.macAddress().c_str(), WiFi.channel());
+}
+
+JSONVar getEspNowReadings() {
+  JSONVar readings = JSON.parse("[]");
+  int index = 0;
+  for (int id = 0; id < 256; ++id) {
+    portENTER_CRITICAL(&espNowMutex);
+    EspNowReading reading = espNowReadings[id];
+    portEXIT_CRITICAL(&espNowMutex);
+    if (!reading.received) continue;
+
+    unsigned long age = millis() - reading.receivedAt;
+    readings[index]["id"] = id;
+    readings[index]["distance"] = reading.distance;
+    readings[index]["units"] = reading.units;
+    readings[index]["ageMs"] = age;
+    readings[index]["stale"] = age >= espNowStaleDelay;
+    ++index;
+  }
+  return readings;
+}
 
 // Create a sensor object for our MEMS accelerometer
 #if defined(MPU6050)
@@ -425,6 +514,8 @@ String getSensorReadings() {
   DBG_PRINT(finalRoll);
   DBG_PRINTLN("");
 
+  const JSONVar espNowData = getEspNowReadings();
+  imuData["espNow"] = espNowData;
   String jsonString = JSON.stringify(imuData);
   return jsonString;
 }
@@ -769,6 +860,7 @@ void setup() {
     data["p_tolerance"] = String(pTolerance, 2);
     data["r_tolerance"] = String(rTolerance, 2);
     data["wifi_state"] = wifiStatusText;
+    data["wifi_channel"] = WiFi.channel();
     data["MAC"] = WiFi.macAddress();
     request -> send(200, "application/json", JSON.stringify(data));
   });
@@ -1069,6 +1161,8 @@ void setup() {
   // setup our Wifi connection
   WiFi.setAutoReconnect(true); // Tells the ESP32 internal core to reconnect automatically
   applyWifiSettings();
+  WiFi.setSleep(false);
+  initEspNow();
 
   publishReadings(); // so /readings has valid data before the first loop() publish
   server.begin(); // start the webserver for the Access Point and Station
