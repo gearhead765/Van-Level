@@ -807,7 +807,7 @@ void setup() {
   DBG_PRINT("SoftAP server started at: ");
   DBG_PRINTLN(myIP);
 
-  // HTML+JS+CSS+Images server callbacks
+  // HTML+Images server callbacks
   // handlers are evaluated in the order they are attached to the server.
   server.onNotFound([](AsyncWebServerRequest * request) {
     request -> send(404, "text/html", "<h1 align=\"center\">Oops! It's not here.</h1>");
@@ -1145,8 +1145,7 @@ void setup() {
 
   // only these folders are public; APconfig.json and the HTML pages are not served from here
   server.serveStatic("/images", LittleFS, "/images");
-  server.serveStatic("/js", LittleFS, "/js");
-
+  
   // server event callback
   events.onConnect([](AsyncEventSourceClient * client) {
     if (client -> lastId()) {
