@@ -656,7 +656,8 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
       DBG_PRINT("Successfully connected to router! IP: ");
       localIP = WiFi.localIP().toString();
       setWifiStatusText("Connected to saved WiFi");
-      DBG_PRINTLN(localIP);
+      Serial.print("Connected to saved WiFi: ");
+      Serial.println(localIP);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       DBG_PRINTLN("Lost connection to router. Background auto-reconnect active...");
@@ -804,8 +805,8 @@ void setup() {
   IPAddress NMask(255, 255, 255, 0);
   WiFi.softAPConfig(apIP, apIP, NMask);
   myIP = WiFi.softAPIP().toString();
-  DBG_PRINT("SoftAP server started at: ");
-  DBG_PRINTLN(myIP);
+  Serial.print("SoftAP server started at: ");
+  Serial.println(myIP);
 
   // HTML+Images server callbacks
   // handlers are evaluated in the order they are attached to the server.
