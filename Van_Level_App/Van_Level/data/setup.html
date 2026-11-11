@@ -411,6 +411,21 @@
       margin-right: 6px;
     }
 
+    #vehicle .additional-sensors {
+      margin-bottom: var(--space-5);
+    }
+
+    #vehicle .additional-sensors h4 {
+      margin: 0 0 8px;
+      font-size: var(--text-lg);
+      font-weight: 700;
+    }
+
+    #vehicle .additional-sensors label {
+      display: block;
+      margin-bottom: 6px;
+    }
+
     label {
       font-weight: 500;
     }
@@ -661,6 +676,12 @@
               <input type="number" step="0.1" min="50" max="100" id="track" class="form-control" placeholder="68" value="">
             </div>
           </div>
+          <div class="additional-sensors">
+            <h4>Additional Sensors</h4>
+            <label for="frontLidarEnabled"><input type="checkbox" id="frontLidarEnabled"> Front LiDAR</label>
+            <label for="rearLidarEnabled"><input type="checkbox" id="rearLidarEnabled"> Rear LiDAR</label>
+            <label for="undercarriageSonarEnabled"><input type="checkbox" id="undercarriageSonarEnabled"> Undercarriage SONAR</label>
+          </div>
           <div class="text-center button-row">
             <button class="btn btn-block" type="button" id="vehicle_btn" title=Apply>Apply</button>
             <div class="status-msg" id="msg-vehicle" role="status" aria-live="polite"></div>
@@ -793,6 +814,9 @@
           setValue('wheelbase', response.wheelbase);
           setValue('track', response.track);
           setValue('vanType', response.van_type);
+          $('#frontLidarEnabled').checked = response.frontLidarEnabled !== false;
+          $('#rearLidarEnabled').checked = response.rearLidarEnabled !== false;
+          $('#undercarriageSonarEnabled').checked = response.undercarriageSonarEnabled !== false;
 
           const fractionVal = parseFloat(response.fraction);
           if (fractionVal > 0) {
@@ -946,7 +970,10 @@
           const params = new URLSearchParams({
             van_type: getValue('vanType'),
             wheelbase: getValue('wheelbase'),
-            track: getValue('track')
+            track: getValue('track'),
+            frontLidarEnabled: $('#frontLidarEnabled').checked,
+            rearLidarEnabled: $('#rearLidarEnabled').checked,
+            undercarriageSonarEnabled: $('#undercarriageSonarEnabled').checked
           });
 
           fetch(`/applyVehicleFunction?${params}`)

@@ -169,6 +169,11 @@
     var SVG_NS = "http://www.w3.org/2000/svg";
     var wheelIds = { lf: "left-front", rf: "right-front", lr: "left-rear", rr: "right-rear" };
     var sensorCenters = { 1: [1448, 714], 2: [365, 531.5], 3: [1504, 531.5] };
+    var sensorVisibilityKeys = {
+      1: "undercarriageSonarEnabled",
+      2: "frontLidarEnabled",
+      3: "rearLidarEnabled"
+    };
     var distanceUnits = {
       0: { label: "cm", meters: 0.01 },
       1: { label: "in", meters: 0.0254 },
@@ -310,6 +315,7 @@
         var reading = readings.find(function(item) { return item && item.id === Number(id); });
         var display = getSensorDisplay(Number(id), reading, elapsed);
         var region = document.getElementById("sensor-" + id);
+        region.setAttribute("visibility", d && d[sensorVisibilityKeys[id]] === false ? "hidden" : "visible");
         region.setAttribute("data-state", display.state);
         region.querySelector("title").textContent = "Sensor " + id + ": " + display.text;
         var text = region.querySelector("text");

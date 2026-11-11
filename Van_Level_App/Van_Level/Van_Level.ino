@@ -15,7 +15,8 @@
     Obstical detection zones use color coding to indicate the presence of obstacles.
     Green indicates no obsticles within range.  Red indicates the presence of an obstacle,
     and yellow indicates a problem with the sensor or radio communication.  Zones will also
-    display a range value to the obstacle detected.
+    display a range value to the obstacle detected.  If not using the optional obstacle
+    detection sensors, you can disable the zones on the /setup page.
 
     The /setup page allows configuration of the Access Point, Wifi network setup, sensor
     calibration, camper information and firmware updates.  Default AP credentials are located
@@ -132,6 +133,9 @@ float blockFraction = 2.0f;  // default to 1/2" block heights
 float wheelbase = 148.0f;    // inches
 float track = 68.0f;         // inches
 String vanType = "Transit";
+bool frontLidarEnabled = true;
+bool rearLidarEnabled = true;
+bool undercarriageSonarEnabled = true;
 
 // Timer variables
 unsigned long bootStart = 0;  // if non-zero, will restart when bootStart + bootDelay = now
@@ -429,33 +433,53 @@ void updateSensorData() {
   if (hasIMU) {
     float rawPitch = 0; // changed from double
     float rawRoll = 0;  // changed from double
+    float accelX = 0;
+    float accelY = 0;
+    float accelZ = 0;
 
     #if defined(MPU6050)
       sensors_event_t a, g, temp;
       imuSensor.getEvent(&a, &g, &temp);
-      
-      // rawPitch = (atan(a.acceleration.x / sqrt(sq(a.acceleration.y) + sq(a.acceleration.z)))) * 180/PI;
-      // rawRoll = (atan(a.acceleration.y / sqrt(sq(a.acceleration.x) + sq(a.acceleration.z)))) * 180/PI;
-      
-      // optimized float calculations instead of doubles above to utilize the ESP32 hardware floating point unit
-      rawPitch = atan2f(a.acceleration.x, sqrtf(a.acceleration.y * a.acceleration.y + a.acceleration.z * a.acceleration.z)) * 57.29577951f;
-      rawRoll = atan2f(a.acceleration.y, sqrtf(a.acceleration.x * a.acceleration.x + a.acceleration.z * a.acceleration.z)) * 57.29577951f;
-      
+      accelX = a.acceleration.x;
+      accelY = a.acceleration.y;
+      accelZ = a.acceleration.z;
     #elif defined(ADXL343)
       sensors_event_t event;
       imuSensor.getEvent(&event);
-      
-      // rawPitch = (atan(event.acceleration.x / sqrt(sq(event.acceleration.y) + sq(event.acceleration.z)))) * 180/PI;
-      // rawRoll = (atan(event.acceleration.y / sqrt(sq(event.acceleration.x) + sq(event.acceleration.z)))) * 180/PI;
-      
-      // optimized float calculations instead of doubles above to utilize the ESP32 hardware floating point unit
-      rawPitch = atan2f(event.acceleration.x, sqrtf(event.acceleration.y * event.acceleration.y + event.acceleration.z * event.acceleration.z)) * 57.29577951f;
-      rawRoll = atan2f(event.acceleration.y, sqrtf(event.acceleration.x * event.acceleration.x + event.acceleration.z * event.acceleration.z)) * 57.29577951f;
+      accelX = event.acceleration.x;
+      accelY = event.acceleration.y;
+      accelZ = event.acceleration.z;
     #endif
+    // optimized float calculations instead of doubles to utilize the ESP32 hardware floating point unit
+    rawPitch = atan2f(accelX, sqrtf(accelY * accelY + accelZ * accelZ)) * 57.29577951f;
+    rawRoll = atan2f(accelY, sqrtf(accelX * accelX + accelZ * accelZ)) * 57.29577951f;
 
     // apply the Exponential Moving Average (EMA) filter
     filteredPitch = (alpha * rawPitch) + ((1.0f - alpha) * filteredPitch);
     filteredRoll = (alpha * rawRoll) + ((1.0f - alpha) * filteredRoll);
+
+    // don't flood the serial monitor with IMU data, one Hz is enough.
+    static unsigned long lastImuDebugTime = 0;
+    unsigned long now = millis();
+    if (now - lastImuDebugTime >= 1000) {
+      lastImuDebugTime = now;
+      DBG_PRINT("IMU accel m/s^2 x=");
+      DBG_PRINT(accelX);
+      DBG_PRINT(" y=");
+      DBG_PRINT(accelY);
+      DBG_PRINT(" z=");
+      DBG_PRINT(accelZ);
+      DBG_PRINT(" alpha=");
+      DBG_PRINT(alpha);
+      DBG_PRINT(" raw pitch=");
+      DBG_PRINT(rawPitch);
+      DBG_PRINT(" raw roll=");
+      DBG_PRINT(rawRoll);
+      DBG_PRINT(" filtered pitch=");
+      DBG_PRINT(filteredPitch);
+      DBG_PRINT(" filtered roll=");
+      DBG_PRINTLN(filteredRoll);
+    }
   }
 }
 
@@ -478,7 +502,7 @@ String getSensorReadings() {
   imuData["track"] = String(track, 1);
   imuData["vanType"] = vanType;
 
-  // Block height under each wheel relative to the lowest wheel (which reads 0)
+  // block height under each wheel relative to the lowest wheel (which reads 0)
   float pitchHeight = tanf(fabsf(finalPitch) * DEG_TO_RAD) * wheelbase;
   float rollHeight = tanf(fabsf(finalRoll) * DEG_TO_RAD) * track;
   float lf, rf, lr, rr;
@@ -507,15 +531,12 @@ String getSensorReadings() {
 
   bool isLevel = (fabsf(finalPitch) <= pTolerance) && (fabsf(finalRoll) <= rTolerance);
   imuData["lvl"] = isLevel;
-  
-  DBG_PRINT("Filtered Pitch: ");
-  DBG_PRINT(finalPitch);
-  DBG_PRINT(", Filtered Roll: ");
-  DBG_PRINT(finalRoll);
-  DBG_PRINTLN("");
 
   const JSONVar espNowData = getEspNowReadings();
   imuData["espNow"] = espNowData;
+  imuData["frontLidarEnabled"] = frontLidarEnabled;
+  imuData["rearLidarEnabled"] = rearLidarEnabled;
+  imuData["undercarriageSonarEnabled"] = undercarriageSonarEnabled;
   String jsonString = JSON.stringify(imuData);
   return jsonString;
 }
@@ -636,7 +657,7 @@ void applyWifiSettings() {
 
 // Function to watch for connection events
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
-  // We only want one SoftAP connection. For basic security, we rely
+  // we only want one SoftAP connection. For basic security, we rely
   // on the AP password to limit who can change our configuration.
   switch (event) {
     case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
@@ -653,11 +674,12 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
       DBG_PRINTLN("Wi-Fi Station started. Connecting...");
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      DBG_PRINT("Successfully connected to router! IP: ");
       localIP = WiFi.localIP().toString();
       setWifiStatusText("Connected to saved WiFi");
-      Serial.print("Connected to saved WiFi: ");
-      Serial.println(localIP);
+      Serial.print("Connected to saved WiFi at ");
+      Serial.print(localIP);
+      Serial.print(" on channel: ");
+      Serial.println(WiFi.channel());
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       DBG_PRINTLN("Lost connection to router. Background auto-reconnect active...");
@@ -692,7 +714,7 @@ void setup() {
   DBG_PRINTLN("LittleFS successfully mounted");
 
   // get default SoftAP configuration from file
-  File dataFile = LittleFS.open(s_configFile, FILE_READ); //Open File for reading
+  File dataFile = LittleFS.open(s_configFile, FILE_READ); // open file for reading
   if (!dataFile) {
     Serial.println("Config file open failed on read: Halting");
     while (1);
@@ -739,6 +761,10 @@ void setup() {
   wheelbase = preferences.getFloat("wheelbase", wheelbase);
   track = preferences.getFloat("track", track);
   vanType = preferences.getString("vanType", vanType);
+  frontLidarEnabled = preferences.getBool("frontLidar", frontLidarEnabled);
+  rearLidarEnabled = preferences.getBool("rearLidar", rearLidarEnabled);
+  undercarriageSonarEnabled = preferences.getBool("underSonar",
+      preferences.getBool("underUltrasonic", undercarriageSonarEnabled));
   pTolerance = preferences.getFloat("pTolerance", pTolerance);
   rTolerance = preferences.getFloat("rTolerance", rTolerance);
   
@@ -808,7 +834,7 @@ void setup() {
   Serial.print("SoftAP server started at: ");
   Serial.println(myIP);
 
-  // HTML+Images server callbacks
+  // html and image server callbacks
   // handlers are evaluated in the order they are attached to the server.
   server.onNotFound([](AsyncWebServerRequest * request) {
     request -> send(404, "text/html", "<h1 align=\"center\">Oops! It's not here.</h1>");
@@ -858,6 +884,9 @@ void setup() {
     data["wheelbase"] = String(wheelbase, 1);
     data["track"] = String(track, 1);
     data["van_type"] = vanType;
+    data["frontLidarEnabled"] = frontLidarEnabled;
+    data["rearLidarEnabled"] = rearLidarEnabled;
+    data["undercarriageSonarEnabled"] = undercarriageSonarEnabled;
     data["p_tolerance"] = String(pTolerance, 2);
     data["r_tolerance"] = String(rTolerance, 2);
     data["wifi_state"] = wifiStatusText;
@@ -866,7 +895,7 @@ void setup() {
     request -> send(200, "application/json", JSON.stringify(data));
   });
 
-  // Starts an async scan on the first call; the page polls until it gets the result array
+  // starts an async scan on the first call; the page polls until it gets the result array
   server.on("/scanWifi", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     REQUIRE_AUTH(request);
     int n = WiFi.scanComplete();
@@ -913,7 +942,7 @@ void setup() {
       DBG_PRINT("Writing AP SSID :: ");
       DBG_PRINTLN(txtssid);
     }
-    // WPA2 passwords must be 8 or more characters. SoftAP will fail if fewer.
+    // passwords must be at least 8 characters for WPA2; SoftAP will fail if fewer.
     if (txtpass.length() > 7) {
       preferences.putString("AP_PASS", txtpass);
       DBG_PRINT("Writing AP PASSWORD :: ");
@@ -956,7 +985,7 @@ void setup() {
       DBG_PRINT("Writing WIFI SSID :: ");
       DBG_PRINTLN(wifi_ssid);
     }
-    if (wifi_pass.length() > 7) { // WPA2 requires a least 8 chars
+    if (wifi_pass.length() > 7) { // passwords must be at least 8 characters for WPA2
       preferences.putString("WIFI_PASS", wifi_pass);
       DBG_PRINT("Writing WIFI PASSWORD :: ");
       #ifdef HIDE_PASSWORDS
@@ -1116,6 +1145,18 @@ void setup() {
     preferences.putString("vanType", vanType);
     preferences.putFloat("wheelbase", wheelbase);
     preferences.putFloat("track", track);
+    if (request->hasParam("frontLidarEnabled")) {
+      frontLidarEnabled = request->getParam("frontLidarEnabled")->value() == "true";
+    }
+    if (request->hasParam("rearLidarEnabled")) {
+      rearLidarEnabled = request->getParam("rearLidarEnabled")->value() == "true";
+    }
+    if (request->hasParam("undercarriageSonarEnabled")) {
+      undercarriageSonarEnabled = request->getParam("undercarriageSonarEnabled")->value() == "true";
+    }
+    preferences.putBool("frontLidar", frontLidarEnabled);
+    preferences.putBool("rearLidar", rearLidarEnabled);
+    preferences.putBool("underSonar", undercarriageSonarEnabled);
     request -> send(200, "text/plain", "ok");
   });
 
@@ -1159,7 +1200,7 @@ void setup() {
   server.addHandler( & events);
 
   // setup our Wifi connection
-  WiFi.setAutoReconnect(true); // Tells the ESP32 internal core to reconnect automatically
+  WiFi.setAutoReconnect(true); // tells the ESP32 core to reconnect automatically
   applyWifiSettings();
   WiFi.setSleep(false);
   initEspNow();
