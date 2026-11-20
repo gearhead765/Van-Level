@@ -10,4 +10,5 @@ typedef struct {
   uint8_t id;
   uint8_t units;
   int16_t distance;
+  float obstacleThresholdMm; // Positive mm threshold for sensor 1; zero for Lidar
 } EspNowMessage;

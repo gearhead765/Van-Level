@@ -35,4 +35,4 @@ The boards were produced by [OSHPark](https://oshpark.com/shared_projects/d4r7hp
 
 ![](Images/van_level_pcb.png)
 
-Assembly is straight forward.  Solder the lowest components first.  The Huzzah board was mounted on headers, but the IMU board was mounted directly on top of the carrier board to allow the IMU board to clear the inside of the box.
+Assembly is straight forward.  Solder the lowest components first.  The Huzzah board was mounted on headers, but the IMU board was mounted directly on top of the carrier board to allow the IMU board to clear the inside of the box.  Since the Recom DC-DC converter is fairly heavy and this will be used in a high-vibration environment, you might want to adhere the converter to the PCB with a suitable adhesive (3M DP420NS or similar).

@@ -19,11 +19,10 @@
     detection sensors, you can disable the zones on the /setup page.
 
     The /setup page allows configuration of the Access Point, Wifi network setup, sensor
-    calibration, camper information and firmware updates.  Default AP credentials are located
-    in the LittleFS data folder at /data/APconfig.json.  You can change these if you want, but
-    the prefered method is to change the AP credentials after firmware installation using the
-    /setup page.  If you forget your AP credentials, you can recover the defaults by holding down
-    the boot button on the ESP32 for a 5 seconds during startup.
+    calibration, camper information and firmware updates.  The default AP name is
+    VanLevel_nnnn, where nnnn is the last four hex digits of the device's factory MAC
+    address. Change the AP credentials using /setup, or recover the defaults by holding
+    the ESP32 BOOT button for 5 seconds during startup.
 
     Wifi connections are managed through the /setup page, where you can configure the ESP32
     to connect to your preferred network.  Once connected, your preferences will be saved and
@@ -68,10 +67,11 @@
 	    permission notice shall be included in all copies or substantial portions of the Software.
 
 *******************************************************************************************/
-const char* VERSION = "2.0.0a";
+const char* VERSION = "2.0.0b";
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <esp_mac.h>
 #include <esp_now.h>
 #include <cstring>
 #include <ESPAsyncWebServer.h>
@@ -107,8 +107,9 @@ const char* VERSION = "2.0.0a";
   #include <Adafruit_ADXL343.h>
 #endif
 
-// SoftAP configuration
-const char * s_configFile = "/APconfig.json"; // SoftAP configuration defaults
+// SoftAP and STA configuration
+constexpr char DEFAULT_AP_PASSWORD[] = "12345678";
+constexpr char DEFAULT_AP_IP[] = "192.168.4.1";
 String wsid;
 String wpass;
 String esid;
@@ -117,7 +118,6 @@ String password;
 String myIP;
 String localIP;
 bool apConnected = false;
-JSONVar configJSON;
 
 // EEPROM storage for configuration values
 Preferences preferences;
@@ -185,11 +185,15 @@ typedef struct {
   uint8_t id;
   uint8_t units;
   int16_t distance;
+  float obstacleThresholdMm;
 } EspNowMessage;
+
+static_assert(sizeof(EspNowMessage) == 8, "Unexpected ESP-NOW packet layout");
 
 struct EspNowReading {
   int16_t distance;
   uint8_t units;
+  float obstacleThresholdMm;
   unsigned long receivedAt;
   bool received;
 };
@@ -203,10 +207,13 @@ void onEspNowReceive(const esp_now_recv_info_t *info, const uint8_t *data, int l
 
   EspNowMessage message;
   memcpy(&message, data, sizeof(message));
+  if (message.id == 1 && (!isfinite(message.obstacleThresholdMm)
+      || message.obstacleThresholdMm <= 0)) return;
   unsigned long receivedAt = millis();
   portENTER_CRITICAL(&espNowMutex);
   espNowReadings[message.id].distance = message.distance;
   espNowReadings[message.id].units = message.units;
+  espNowReadings[message.id].obstacleThresholdMm = message.obstacleThresholdMm;
   espNowReadings[message.id].receivedAt = receivedAt;
   espNowReadings[message.id].received = true;
   portEXIT_CRITICAL(&espNowMutex);
@@ -224,8 +231,8 @@ void initEspNow() {
     esp_now_deinit();
     return;
   }
-  Serial.printf("ESP-NOW listening on STA MAC %s, WiFi channel %d\n",
-                WiFi.macAddress().c_str(), WiFi.channel());
+  Serial.printf("ESP-NOW listening on STA MAC %s, WiFi channel %ld\n",
+                WiFi.macAddress().c_str(), static_cast<long>(WiFi.channel()));
 }
 
 JSONVar getEspNowReadings() {
@@ -241,6 +248,7 @@ JSONVar getEspNowReadings() {
     readings[index]["id"] = id;
     readings[index]["distance"] = reading.distance;
     readings[index]["units"] = reading.units;
+    if (id == 1) readings[index]["obstacleThresholdMm"] = reading.obstacleThresholdMm;
     readings[index]["ageMs"] = age;
     readings[index]["stale"] = age >= espNowStaleDelay;
     ++index;
@@ -713,29 +721,6 @@ void setup() {
   }
   DBG_PRINTLN("LittleFS successfully mounted");
 
-  // get default SoftAP configuration from file
-  File dataFile = LittleFS.open(s_configFile, FILE_READ); // open file for reading
-  if (!dataFile) {
-    Serial.println("Config file open failed on read: Halting");
-    while (1);
-  } else {
-    String configContents;
-    DBG_PRINTLN("Reading configuration data from file:");
-    if (dataFile.available()) configContents = dataFile.readString();
-    dataFile.close();
-    #ifdef HIDE_PASSWORDS
-      DBG_PRINTLN( "*Hidden*");
-    #else
-      DBG_PRINTLN(configContents);
-    #endif
-
-    configJSON = JSON.parse(configContents);
-    if (JSON.typeof(configJSON) == "undefined") {
-      Serial.println("Parsing configuration file data failed: Halting");
-      while (1);
-    }
-  }
-
   // reset board to defaults if necessary (i.e. lost AP password)
   //  click EN/RESET button, then press and hold BOOT/GPIO0 button for 5 seconds
   //  careful with Adafruit Huzzah ESP32 breakout board, it does not come with 
@@ -785,23 +770,20 @@ void setup() {
   DBG_PRINT(" rTolerance=");
   DBG_PRINTLN(rTolerance);
 
-  // retrieve EEPROM AP configuration
+  // Use saved AP settings when present
   esid = preferences.getString("AP_SSID", "");
-  epass = preferences.getString("AP_PASS", "");
-  String eap = preferences.getString("AP_IP", "");
-
-  // if EEPROM info is missing, use defaults from config file
-  if ((esid == "") && (epass == "")) {
-    DBG_PRINTLN("\nInitial SoftAP user/pass configuration");
-    esid = String(configJSON["AP_name"]);
-    epass = String(configJSON["AP_pass"]);
-    preferences.putString("AP_SSID", esid);
-    preferences.putString("AP_PASS", epass);
-  }
-  if (eap == "") {
-    DBG_PRINTLN("\nInitial SoftAP address configuration");
-    eap = String(configJSON["AP_IP"]);
-    preferences.putString("AP_IP", eap);
+  epass = preferences.getString("AP_PASS", DEFAULT_AP_PASSWORD);
+  String eap = preferences.getString("AP_IP", DEFAULT_AP_IP);
+  if (esid.isEmpty()) {
+    uint8_t mac[6];
+    if (esp_efuse_mac_get_default(mac) != ESP_OK) {
+      Serial.println("Failed to read factory MAC for default SoftAP SSID: Halting");
+      while (1);
+    }
+    char defaultSsid[sizeof("VanLevel_0000")];
+    snprintf(defaultSsid, sizeof(defaultSsid), "VanLevel_%02X%02X",
+             static_cast<unsigned>(mac[4]), static_cast<unsigned>(mac[5]));
+    esid = defaultSsid;
   }
 
   DBG_PRINT("Access point SSID: ");
@@ -831,7 +813,9 @@ void setup() {
   IPAddress NMask(255, 255, 255, 0);
   WiFi.softAPConfig(apIP, apIP, NMask);
   myIP = WiFi.softAPIP().toString();
-  Serial.print("SoftAP server started at: ");
+  Serial.print("SoftAP server '");
+  Serial.print( esid);
+  Serial.print( "' started at: ");
   Serial.println(myIP);
 
   // html and image server callbacks
@@ -869,7 +853,7 @@ void setup() {
   server.on("/setupData", WebRequestMethod::HTTP_GET, [](AsyncWebServerRequest * request) {
     REQUIRE_AUTH(request);
     JSONVar data;
-    data["default_pass"] = (epass == String(configJSON["AP_pass"]));
+    data["default_pass"] = (epass == DEFAULT_AP_PASSWORD);
     data["ver"] = String(VERSION);
     data["myIP"] = myIP;
     data["localIP"] = localIP;
@@ -1185,7 +1169,7 @@ void setup() {
     }
   });
 
-  // only these folders are public; APconfig.json and the HTML pages are not served from here
+  // Only serve the public asset folders here.
   server.serveStatic("/images", LittleFS, "/images");
   
   // server event callback

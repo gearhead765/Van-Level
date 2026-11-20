@@ -7,7 +7,9 @@
   <meta http-equiv=X-UA-Compatible content=IE=edge>
   <title>Van Level</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+  <link rel="icon" href="images/favicon.ico" sizes="any">
   <style>
     :root {
       color-scheme: light dark;
@@ -299,7 +301,8 @@
       var meters = distance * unit.meters;
       var state = "unknown";
       if (distance >= 0 && id === 1) {
-        state = meters < 0.0508 ? "obstacle" : "clear";
+        if (!Number.isFinite(reading.obstacleThresholdMm) || reading.obstacleThresholdMm <= 0) return unknown;
+        state = meters < reading.obstacleThresholdMm / 1000 ? "obstacle" : "clear";
       } else if (distance > 0) {
         var clearDistance = Math.round(LIDAR_MAX_METERS / unit.meters * 10);
         state = reading.distance >= clearDistance ? "clear" : "obstacle";
